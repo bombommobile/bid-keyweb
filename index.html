@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<!-- 실제 키웹은 GitHub API 외의 통신을 브라우저가 막는다. 목업은 통신을 하지 않는다. -->
+<!-- 브라우저가 GitHub API 외의 통신을 막는다. 키와 토큰이 다른 서버로 나가지 않는다. -->
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src https://api.github.com">
-<title>입찰가 암호화 키 관리 (목업)</title>
+<title>입찰가 암호화 키 관리</title>
 <link rel="icon" type="image/png" href="data:image/png;base64,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"><!-- 유니피커 로고 (data URI 내장 — 외부 요청 없음) -->
 <style>
   /* gitbook.com 실측값(2026-07-18 computed style) — 디자인 요청이 없는 한 토큰을 바꾸지 않는다 */
@@ -207,7 +207,7 @@
   }
 </style>
 <style>
-  /* ── 키웹 목업 전용 ── 프라이머리 = 블랙, 레드는 위험 표시에만 */
+  /* ── 키웹 전용 ── 프라이머리 = 블랙, 레드는 위험 표시에만 */
   .hint .ico .i{width:16px;height:16px}
   .hint.safe{background:#f7f7f7;border-color:var(--line)}
   .hint.stop{background:var(--red-bg);border-color:var(--red-line);color:#7a0f1d}
@@ -387,7 +387,6 @@
   <div class="brand">
     <img class="logo" src="data:image/png;base64,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" alt="입찰가 암호화 키 관리">
     입찰가 암호화 키 관리
-    <span class="env">목업</span>
   </div>
   <div class="header-right repo" id="repoChip" data-review-key="header-repo"><span class="dot"></span><b id="repoName">연결 안 됨</b><button class="linkbtn" id="disconnect" hidden>연결 끊기</button></div>
 </header>
@@ -418,7 +417,7 @@
       <a class="item" href="#principle"><svg class="i"><use href="#i-info"/></svg>입찰가 암호화 원리</a>
     </div>
   </div>
-  <div class="powered">목업입니다. GitHub에 실제로 저장하지 않습니다.</div>
+  <div class="powered">이 페이지는 GitHub(api.github.com) 외의 서버와 통신하지 않습니다.</div>
 </aside>
 
 <main>
@@ -722,29 +721,24 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
 </script>
 <div class="toasts" id="toasts" aria-live="polite"></div>
 <script>
-/* ===== 키웹 목업 — 가짜 데이터로 모든 버튼이 동작한다. 외부 통신 없음 ===== */
+/* ===== 키웹 — GitHub API(api.github.com)하고만 통신한다. 토큰은 이 페이지 메모리에만 둔다. ===== */
 (function () {
   'use strict';
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
 
-  function fakePem(kind, seed) {
-    var body = '', c = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/', n = seed;
-    for (var i = 0; i < (kind === 'PRIVATE' ? 1216 : 392); i++) { n = (n * 1103515245 + 12345) & 0x7fffffff; body += c[n % 64]; }
-    return '-----BEGIN ' + kind + ' KEY-----\n' + body.replace(/(.{64})/g, '$1\n').trim() + '\n-----END ' + kind + ' KEY-----\n';
-  }
-  var S = {
-    connected: false, repo: '', branch: '', key: null, saved: { pub: false, priv: false }, fresh: null,
-    vault: [],      /* [실구현] 연결한 저장소의 keys/ 폴더에서 읽는다 */
-    history: []     /* [실구현] keys/history.jsonl 에서 읽는다 */
-  };
+  var API = 'https://api.github.com';
+  var BRANCH = 'main';
+  var BID_RE = /^[A-Za-z0-9-]{3,40}$/;
+  var S = { connected: false, repo: '', token: '', bidId: '', key: null, saved: { pub: false, priv: false }, exportAt: null, fresh: null, vault: [], history: [] };
   var ACTION = { generate: '키 생성·GitHub 저장', download: 'GitHub에서 내려받음', 'export-pc': 'PC에 저장' };
 
+  /* ---------- 공통 ---------- */
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
-  function group(h) { return h.match(/.{1,4}/g).join(' '); }
+  function group(h) { return h ? h.match(/.{1,4}/g).join(' ') : '-'; }
   function pad(n) { return String(n).padStart(2, '0'); }
   function fmt(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
-  function randHex(n) { var a = new Uint8Array(n); crypto.getRandomValues(a); return Array.prototype.map.call(a, function (b) { return b.toString(16).padStart(2, '0'); }).join(''); }
+  function nowIso() { return new Date().toISOString().replace(/\.\d+Z$/, 'Z'); }
   function hint(kind, html, icon) {
     var ic = icon || (kind === 'safe' ? 'shield' : 'alert');
     var st = kind === 'warn' ? ' style="color:var(--warn-ico)"' : '';
@@ -752,7 +746,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
   }
   function toast(msg, kind) {
     var t = document.createElement('div'); t.className = 'toast ' + (kind || ''); t.textContent = msg;
-    $('#toasts').appendChild(t); setTimeout(function () { t.remove(); }, 4200);
+    $('#toasts').appendChild(t); setTimeout(function () { t.remove(); }, 5000);
   }
   function download(name, text) {
     var a = document.createElement('a');
@@ -760,10 +754,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     a.download = name; document.body.appendChild(a); a.click(); a.remove();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
   }
-  function log(e) { e.at = new Date().toISOString().replace(/\.\d+Z$/, 'Z'); S.history.push(e); renderHistory(); }
   function go(id) { var el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-
-  /* 단계 상태 */
   function setStep(n, st) {
     $('#p' + n).dataset.state = st;
     var b = $('[data-badge="' + n + '"]');
@@ -771,71 +762,165 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     b.textContent = st === 'current' ? '진행 중' : st === 'done' ? '완료' : '대기';
   }
 
-  /* 1. 연결 */
-  $('#btnConnect').onclick = function () {
-    var repo = $('#repo').value.trim(), branch = $('#branch').value.trim(), token = $('#token').value.trim(), out = $('#connectResult');
+  /* ---------- GitHub API ---------- */
+  function GitHubError(status, message) { this.status = status; this.message = message; }
+
+  async function gh(method, path, body, raw) {
+    var headers = { 'Authorization': 'Bearer ' + S.token, 'X-GitHub-Api-Version': '2022-11-28',
+      'Accept': raw ? 'application/vnd.github.raw+json' : 'application/vnd.github+json' };
+    if (body) headers['Content-Type'] = 'application/json';
+    var res;
+    try {
+      res = await fetch(API + path, { method: method, headers: headers, body: body ? JSON.stringify(body) : undefined, cache: 'no-store' });
+    } catch (e) {
+      throw new GitHubError(0, 'GitHub에 연결하지 못했습니다. 인터넷 연결을 확인하세요.');
+    }
+    if (res.ok) return raw ? res.text() : (res.status === 204 ? null : res.json());
+    var detail = '';
+    try { detail = (await res.json()).message || ''; } catch (e) { /* 본문 없음 */ }
+    throw new GitHubError(res.status, explain(res.status, detail));
+  }
+  function explain(status, detail) {
+    if (status === 401) return '토큰이 맞지 않거나 만료되었습니다. 새 토큰을 만들어 다시 연결하세요.';
+    if (status === 403) return '토큰에 이 작업 권한이 없습니다. 토큰의 Contents 권한이 Read and write 인지, 조직 승인이 났는지 확인하세요.' + (detail ? ' (' + detail + ')' : '');
+    if (status === 404) return '찾을 수 없습니다.';
+    if (status === 409 || status === 422) return '저장소가 그사이 바뀌었습니다. 다시 시도합니다.';
+    return 'GitHub 오류 ' + status + (detail ? ': ' + detail : '');
+  }
+  function repoPath(p) { return '/repos/' + S.repo + p; }
+  function filePath(path) { return repoPath('/contents/' + path.split('/').map(encodeURIComponent).join('/') + '?ref=' + BRANCH); }
+
+  /** 파일 내용을 읽는다. 없으면 null. */
+  async function readFile(path) {
+    try { return await gh('GET', filePath(path), null, true); }
+    catch (e) { if (e.status === 404) return null; throw e; }
+  }
+
+  /**
+   * 파일 여러 개와 history.jsonl 추가분을 커밋 하나로 저장한다(Git Data API).
+   * mustNotExist 경로가 이미 있으면 저장하지 않는다. 그사이 다른 커밋이 끼어들면 처음부터 다시 한다.
+   */
+  async function commit(files, historyLines, message, mustNotExist) {
+    for (var attempt = 0; attempt < 3; attempt++) {
+      var ref = await gh('GET', repoPath('/git/ref/heads/' + BRANCH));
+      var parent = await gh('GET', repoPath('/git/commits/' + ref.object.sha));
+      if (mustNotExist && (await readFile(mustNotExist)) !== null) {
+        throw new GitHubError(409, '이 입찰의 키가 이미 저장소에 있습니다. 한 입찰에는 키를 한 번만 만듭니다.');
+      }
+      var tree = files.slice();
+      if (historyLines.length) {
+        var old = (await readFile('keys/history.jsonl')) || '';
+        if (old && !old.endsWith('\n')) old += '\n';
+        tree.push({ path: 'keys/history.jsonl', content: old + historyLines.map(function (l) { return JSON.stringify(l); }).join('\n') + '\n' });
+      }
+      var newTree = await gh('POST', repoPath('/git/trees'), {
+        base_tree: parent.tree.sha,
+        tree: tree.map(function (f) { return { path: f.path, mode: '100644', type: 'blob', content: f.content }; })
+      });
+      var newCommit = await gh('POST', repoPath('/git/commits'), { message: message, tree: newTree.sha, parents: [ref.object.sha] });
+      try {
+        await gh('PATCH', repoPath('/git/refs/heads/' + BRANCH), { sha: newCommit.sha, force: false });
+        return newCommit;
+      } catch (e) {
+        if (e.status !== 422 && e.status !== 409) throw e;   // 다른 커밋이 먼저 들어왔다 → 다시
+      }
+    }
+    throw new GitHubError(409, '저장소가 계속 바뀌고 있어 저장하지 못했습니다. 잠시 뒤 다시 시도하세요.');
+  }
+
+  /* ---------- 1. 연결 ---------- */
+  $('#btnConnect').onclick = async function () {
+    var repo = $('#repo').value.trim(), token = $('#token').value.trim(), out = $('#connectResult'), btn = this;
     if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { out.innerHTML = hint('stop', '저장소를 <b>소유자/저장소</b> 형식으로 입력하세요. 예: your-company/bid-keys'); return; }
     if (!token) { out.innerHTML = hint('stop', '접근 토큰을 입력하세요.'); return; }
-    var btn = this; btn.disabled = true; btn.textContent = '확인하는 중…';
-    setTimeout(function () {
-      btn.disabled = false; btn.textContent = '저장소 확인';
-      if (/public/i.test(repo)) {
-        out.innerHTML = hint('stop', '<b>이 저장소는 공개 상태입니다.</b> 비공개로 바꾼 뒤 다시 시도하세요.') +
-          '<ul class="checks"><li class="bad">비공개 저장소</li><li>쓰기 권한</li><li>브랜치 ' + esc(branch) + ' 있음</li></ul>';
-        return;
+    S.repo = repo; S.token = token;
+    btn.disabled = true; btn.textContent = '확인하는 중…'; out.innerHTML = '';
+    var checks = [];
+    try {
+      var info;
+      try { info = await gh('GET', repoPath('')); }
+      catch (e) { if (e.status === 404) throw new GitHubError(404, '저장소를 찾을 수 없습니다. 이름이 맞는지, 토큰에 이 저장소 권한이 있는지 확인하세요.'); throw e; }
+      checks.push('토큰으로 저장소를 읽을 수 있음');
+      if (!info.private) {
+        out.innerHTML = hint('stop', '<b>이 저장소는 공개 상태입니다.</b> 공개 저장소에 키를 저장하면 누구나 개인키를 볼 수 있습니다. 비공개로 바꾼 뒤 다시 시도하세요.') +
+          '<ul class="checks"><li>' + checks.join('</li><li>') + '</li><li class="bad">비공개 저장소</li></ul>';
+        S.token = ''; return;
       }
-      out.innerHTML = '<ul class="checks"><li>비공개 저장소</li><li>쓰기 권한 (Contents: Read and write)</li><li>브랜치 ' + esc(branch) + ' 있음</li><li>keys/ 폴더에 키 ' + S.vault.length + '건</li></ul>';
-      S.connected = true; S.repo = repo; S.branch = branch;
+      checks.push('비공개 저장소');
+      try { await gh('GET', repoPath('/branches/' + BRANCH)); }
+      catch (e) { if (e.status === 404) throw new GitHubError(404, '<b>main 브랜치가 없습니다.</b> 저장소를 만들 때 Add README 를 켰는지, 기본 브랜치 이름이 main 인지 확인하세요.'); throw e; }
+      checks.push('main 브랜치 있음');
+      await loadVault();
+      checks.push('keys/ 폴더의 키 ' + S.vault.length + '건 읽음');
+      out.innerHTML = '<ul class="checks"><li>' + checks.join('</li><li>') + '</li></ul>' +
+        '<p class="fhint">쓰기 권한은 4단계에서 저장할 때 확인합니다.</p>';
+      S.connected = true;
+      $('#token').value = '';                          // 토큰은 입력란에서 지우고 메모리에만 둔다
       $('#repoChip').classList.add('on'); $('#repoName').textContent = repo; $('#disconnect').hidden = false;
-      $('#sumRepo').textContent = repo; $('#sumBranch').textContent = branch; $('#vaultRepo').textContent = repo;
-      renderVault(); toast('저장소를 확인했습니다.');
-      setTimeout(function () { setStep(1, 'done'); setStep(2, 'current'); go('generate'); }, 700);
-    }, 700);
+      $('#sumRepo').textContent = repo; $('#sumBranch').textContent = BRANCH; $('#vaultRepo').textContent = repo;
+      toast('저장소를 확인했습니다.');
+      setStep(1, 'done'); setStep(2, 'current'); renderGenerate(); go('generate');
+    } catch (e) {
+      S.token = '';
+      out.innerHTML = hint('stop', e.message) + (checks.length ? '<ul class="checks"><li>' + checks.join('</li><li>') + '</li></ul>' : '');
+    } finally {
+      btn.disabled = false; btn.textContent = '저장소 확인';
+    }
   };
   function disconnect() {
-    S.connected = false; $('#token').value = '';
+    S.connected = false; S.token = ''; S.vault = []; S.history = []; $('#token').value = '';
     $('#repoChip').classList.remove('on'); $('#repoName').textContent = '연결 안 됨'; $('#disconnect').hidden = true;
-    resetFrom(2); setStep(1, 'current'); $('#connectResult').innerHTML = ''; renderVault(); go('connect');
+    $('#vaultRepo').textContent = '(연결 전)';
+    resetFrom(2); setStep(1, 'current'); $('#connectResult').innerHTML = ''; renderVault(); renderHistory(); go('connect');
     toast('연결을 끊었습니다. 토큰을 메모리에서 지웠습니다.');
   }
   $('#disconnect').onclick = disconnect;
-  $('#reopen1').onclick = function () { resetFrom(2); setStep(1, 'current'); };
+  $('#reopen1').onclick = function () { disconnect(); };
 
-  /* 2. 생성 — Web Crypto로 실제 RSA-OAEP 2048 키를 만든다 */
+  /* ---------- 2. 키 만들기 ---------- */
   function b64(buf) { var s = '', b = new Uint8Array(buf); for (var i = 0; i < b.length; i++) s += String.fromCharCode(b[i]); return btoa(s); }
   function pem(kind, buf) { return '-----BEGIN ' + kind + ' KEY-----\n' + b64(buf).replace(/(.{64})/g, '$1\n').trim() + '\n-----END ' + kind + ' KEY-----\n'; }
-  async function sha256hex(t) {
-    var h = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(t));
-    return Array.prototype.map.call(new Uint8Array(h), function (b) { return b.toString(16).padStart(2, '0'); }).join('');
-  }
+  function hex(buf) { return Array.prototype.map.call(new Uint8Array(buf), function (x) { return x.toString(16).padStart(2, '0'); }).join(''); }
   async function makeKeys() {
-    if (window.crypto && crypto.subtle) {
-      var kp = await crypto.subtle.generateKey({ name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' }, true, ['encrypt', 'decrypt']);
-      var spki = await crypto.subtle.exportKey('spki', kp.publicKey);
-      var pub = pem('PUBLIC', spki);
-      var priv = pem('PRIVATE', await crypto.subtle.exportKey('pkcs8', kp.privateKey));
-      /* 공개키 해시 = SHA-256(SPKI DER). 입찰시스템(BidCrypto.publicKeyHash)과 같은 계산이라 눈으로 대조할 수 있다. */
-      var h = new Uint8Array(await crypto.subtle.digest('SHA-256', spki));
-      return { pub: pub, priv: priv, hash: Array.prototype.map.call(h, function (x) { return x.toString(16).padStart(2, '0'); }).join('') };
-    }
-    var s = Date.now() % 9999; return { pub: fakePem('PUBLIC', s), priv: fakePem('PRIVATE', s + 1), hash: randHex(32) };
+    var kp = await crypto.subtle.generateKey({ name: 'RSA-OAEP', modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: 'SHA-256' }, true, ['encrypt', 'decrypt']);
+    var spki = await crypto.subtle.exportKey('spki', kp.publicKey);
+    return {
+      pub: pem('PUBLIC', spki),
+      priv: pem('PRIVATE', await crypto.subtle.exportKey('pkcs8', kp.privateKey)),
+      /* 공개키 해시 = SHA-256(SPKI DER). 유니피커 입찰시스템과 같은 계산이라 눈으로 대조할 수 있다. */
+      hash: hex(await crypto.subtle.digest('SHA-256', spki))
+    };
   }
-  function genButtons() {
+  function renderGenerate() {
+    var out = $('#genResult');
+    if (!S.bidId) {
+      out.innerHTML = hint('stop', '<b>입찰 ID가 없습니다.</b> 유니피커 입찰시스템 관리자 페이지의 링크로 이 화면을 여세요.');
+      $('#genActions').innerHTML = ''; return;
+    }
+    if (!(window.crypto && crypto.subtle)) {
+      out.innerHTML = hint('stop', '이 브라우저는 키 만들기를 지원하지 않습니다. 최신 Chrome, Edge, Safari 를 쓰세요.');
+      $('#genActions').innerHTML = ''; return;
+    }
+    out.innerHTML = '';
     $('#genActions').innerHTML = '<button class="btn" id="btnGenerate">키 만들기</button>';
     $('#btnGenerate').onclick = generate;
   }
   async function generate() {
-    var bidId = $('#bidId').value.trim(), out = $('#genResult');
-    if (!/^[\w-]{3,40}$/.test(bidId)) { out.innerHTML = hint('stop', '입찰 ID를 입력하세요. 영문, 숫자, 하이픈만 씁니다.'); return; }
-    if (S.vault.some(function (v) { return v.bidId === bidId; })) {
-      out.innerHTML = hint('stop', '<b>' + esc(bidId) + '의 키가 이미 저장소에 있습니다.</b> 한 입찰에는 키를 한 번만 만듭니다. 보관함에서 기존 키를 내려받으세요.') +
-        '<div class="actions"><a class="btn ghost" href="#vault">보관함으로 이동</a></div>';
-      return;
+    var bidId = S.bidId, out = $('#genResult'), btn = $('#btnGenerate');
+    btn.disabled = true; btn.textContent = '저장소를 확인하는 중…';
+    try {
+      if ((await readFile('keys/' + bidId + '/public.pem')) !== null) {
+        out.innerHTML = hint('stop', '<b>' + esc(bidId) + '의 키가 이미 저장소에 있습니다.</b> 한 입찰에는 키를 한 번만 만듭니다. 보관함에서 기존 키를 내려받으세요.') +
+          '<div class="actions"><a class="btn ghost" href="#vault">보관함으로 이동</a></div>';
+        btn.disabled = false; btn.textContent = '키 만들기'; return;
+      }
+    } catch (e) {
+      out.innerHTML = hint('stop', e.message); btn.disabled = false; btn.textContent = '키 만들기'; return;
     }
-    var btn = $('#btnGenerate'); btn.disabled = true; btn.textContent = '키를 만드는 중…';
-    var k = await makeKeys(); k.bidId = bidId; S.key = k; S.saved = { pub: false, priv: false };
+    btn.textContent = '키를 만드는 중…';
+    var k = await makeKeys(); k.bidId = bidId; k.at = new Date(); S.key = k; S.saved = { pub: false, priv: false };
     out.innerHTML =
-      '<div class="keycard"><dl class="kv"><dt>입찰 ID</dt><dd><b class="mono">' + esc(bidId) + '</b></dd><dt>방식</dt><dd>RSA-OAEP 2048비트, SHA-256</dd><dt>만든 시각</dt><dd>' + fmt(new Date()) + '</dd></dl>' +
+      '<div class="keycard"><dl class="kv"><dt>입찰 ID</dt><dd><b class="mono">' + esc(bidId) + '</b></dd><dt>방식</dt><dd>RSA-OAEP 2048비트, SHA-256</dd><dt>만든 시각</dt><dd>' + fmt(k.at) + '</dd></dl>' +
       '<div class="hashlabel">공개키 해시 — 유니피커 입찰시스템에 표시되는 값과 대조합니다</div><div class="hashbox">' + group(k.hash) + '</div>' +
       '<details class="pem"><summary>공개키 내용 보기</summary><pre><code>' + esc(k.pub) + '</code></pre></details></div>' +
       hint('safe', '키는 이 브라우저 안에서 만들어졌습니다. 아직 어디에도 전송되지 않았습니다.');
@@ -848,7 +933,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     $('#btnRegen').onclick = function () { resetFrom(2); setStep(2, 'current'); toast('만든 키를 버렸습니다. 저장한 적이 없어 기록도 남지 않습니다.'); };
   }
 
-  /* 3. PC 저장 */
+  /* ---------- 3. PC 저장 ---------- */
   $$('[data-save]').forEach(function (b) {
     b.onclick = function () {
       var w = b.dataset.save, k = S.key;
@@ -862,46 +947,58 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     };
   });
   $('#btnToGit').onclick = function () {
-    log({ bidId: S.key.bidId, action: 'export-pc', hash: S.key.hash.slice(0, 8) });
+    S.exportAt = nowIso();
     setStep(3, 'done'); setStep(4, 'current'); renderS4(); go('github');
   };
 
-  /* 4. GitHub 저장 — 가짜 커밋 */
+  /* ---------- 4. GitHub 저장 ---------- */
   function renderS4() {
     var k = S.key, b = $('#s4body');
     b.innerHTML =
-      '<dl class="kv"><dt>저장소</dt><dd class="mono">' + esc(S.repo) + ' (' + esc(S.branch) + ')</dd>' +
-      '<dt>올릴 파일</dt><dd class="mono">keys/' + esc(k.bidId) + '/public.pem<br>keys/' + esc(k.bidId) + '/private.pem<br>keys/history.jsonl (한 줄 추가)</dd></dl>' +
+      '<dl class="kv"><dt>저장소</dt><dd class="mono">' + esc(S.repo) + ' (' + BRANCH + ')</dd>' +
+      '<dt>올릴 파일</dt><dd class="mono">keys/' + esc(k.bidId) + '/public.pem<br>keys/' + esc(k.bidId) + '/private.pem<br>keys/history.jsonl (두 줄 추가)</dd></dl>' +
       '<div class="confirm">' + hint('stop', '<b>저장한 키는 바꿀 수 없습니다.</b> 입찰 ID가 유니피커 입찰시스템 화면의 입찰 ID와 같은지 확인하세요.') +
       '<p style="margin:0 0 10px;font-size:14px">입찰 ID <b class="mono">' + esc(k.bidId) + '</b>, 해시 <span class="mono">' + k.hash.slice(0, 8) + '</span></p>' +
       '<div class="actions"><button class="btn danger" id="btnCommit">' + esc(k.bidId) + ' 키를 GitHub에 저장</button><button class="btn ghost" id="btnBack">취소</button></div></div>' +
       '<div class="progress" hidden><i></i></div><div id="commitOut"></div>';
-    $('#btnBack').onclick = function () { resetFrom(2); setStep(2, 'current'); go('generate'); };
-    $('#btnCommit').onclick = function () {
-      var bar = $('.progress', b); bar.hidden = false; this.disabled = true; $('#btnBack').disabled = true;
-      requestAnimationFrame(function () { $('i', bar).style.width = '100%'; });
-      setTimeout(function () {
-        var sha = randHex(20), short = sha.slice(0, 7), when = new Date();
-        S.vault.push({ bidId: k.bidId, at: fmt(when), hash: k.hash, commit: short, pub: k.pub, priv: k.priv }); S.fresh = k.bidId;
-        log({ bidId: k.bidId, action: 'generate', hash: k.hash.slice(0, 8), commit: short });
+    $('#btnBack').onclick = function () { resetFrom(2); setStep(2, 'current'); renderGenerate(); go('generate'); };
+    $('#btnCommit').onclick = async function () {
+      var btn = this, bar = $('.progress', b), out = $('#commitOut');
+      btn.disabled = true; $('#btnBack').disabled = true; bar.hidden = false; out.innerHTML = '';
+      requestAnimationFrame(function () { $('i', bar).style.width = '70%'; });
+      try {
+        var c = await commit(
+          [{ path: 'keys/' + k.bidId + '/public.pem', content: k.pub }, { path: 'keys/' + k.bidId + '/private.pem', content: k.priv }],
+          [{ at: S.exportAt, bidId: k.bidId, action: 'export-pc', hash: k.hash.slice(0, 8) },
+           { at: nowIso(), bidId: k.bidId, action: 'generate', hash: k.hash.slice(0, 8) }],
+          'keys: ' + k.bidId + ' 키 생성 (sha256 ' + k.hash.slice(0, 8) + ')',
+          'keys/' + k.bidId + '/public.pem');
+        $('i', bar).style.width = '100%';
+        S.fresh = k.bidId;
         $('.confirm', b).remove(); bar.hidden = true;
-        $('#commitOut').innerHTML = hint('safe', '<b>GitHub에 저장했습니다.</b> 커밋 SHA와 시각을 기록했습니다. 이 기록은 귀사 저장소에만 있습니다.') +
-          '<dl class="kv"><dt>커밋</dt><dd class="mono">' + sha + '</dd><dt>시각</dt><dd>' + fmt(when) + '</dd><dt>메시지</dt><dd class="mono">keys: ' + esc(k.bidId) + ' 키 생성 (sha256 ' + k.hash.slice(0, 8) + ')</dd></dl>' +
+        out.innerHTML = hint('safe', '<b>GitHub에 저장했습니다.</b> 커밋 SHA와 시각이 키를 만든 시점의 기록이 됩니다. 이 기록은 귀사 저장소에만 있습니다.') +
+          '<dl class="kv"><dt>커밋</dt><dd class="mono"><a href="' + esc(c.html_url) + '" target="_blank" rel="noopener">' + c.sha + '</a></dd>' +
+          '<dt>시각</dt><dd>' + fmt(new Date(c.committer.date)) + '</dd><dt>메시지</dt><dd class="mono">' + esc(c.message) + '</dd></dl>' +
           '<div class="nextstep" data-review-key="github-next-step"><b>다음 할 일</b>' +
           '<ol class="howto"><li>유니피커 입찰시스템 관리자 페이지에 공개키 파일 <code>' + esc(k.bidId) + '_public.pem</code>을 올립니다. <b>개인키는 올리지 않습니다.</b></li>' +
           '<li>관리자 페이지에 표시된 해시가 아래 값과 같은지 확인하고 확정합니다.</li></ol>' +
           '<div class="hashbox">' + group(k.hash) + '</div>' +
           '<p class="fhint" style="margin-top:8px">개인키는 입찰이 마감된 뒤에 같은 관리자 페이지에서 제출합니다.</p></div>' +
-          '<div class="actions"><a class="btn" href="#vault">보관함에서 보기</a></div><p class="fhint" style="margin-top:10px">다른 입찰의 키는 유니피커 입찰시스템 관리자 페이지에서 그 입찰의 링크로 이 화면을 다시 열어 만듭니다.</p>';
+          '<div class="actions"><a class="btn" href="#vault">보관함에서 보기</a></div>';
         $('[data-badge="4"]').className = 'badge done'; $('[data-badge="4"]').textContent = '완료';
-        renderVault(); toast(k.bidId + ' 키를 GitHub에 저장했습니다.');
-      }, 950);
+        toast(k.bidId + ' 키를 GitHub에 저장했습니다.');
+        loadVault().catch(function () { /* 목록 갱신 실패는 무시 — 다시 불러오기로 해결 */ });
+      } catch (e) {
+        bar.hidden = true; $('i', bar).style.width = '0';
+        btn.disabled = false; $('#btnBack').disabled = false;
+        out.innerHTML = hint('stop', '<b>저장하지 못했습니다.</b> ' + e.message);
+      }
     };
   }
 
   function resetFrom(n) {
-    if (n <= 2) { S.key = null; $('#genResult').innerHTML = ''; genButtons(); setStep(2, 'locked'); }
-    S.saved = { pub: false, priv: false };
+    if (n <= 2) { S.key = null; $('#genResult').innerHTML = ''; $('#genActions').innerHTML = ''; setStep(2, 'locked'); }
+    S.saved = { pub: false, priv: false }; S.exportAt = null;
     ['#fPub', '#fPriv'].forEach(function (s) { var f = $(s); f.classList.remove('saved'); $('.fstate', f).textContent = '아직 저장하지 않음'; });
     $('[data-save="pub"]').innerHTML = '<svg class="i"><use href="#i-down"/></svg>공개키 저장';
     $('[data-save="priv"]').innerHTML = '<svg class="i"><use href="#i-down"/></svg>개인키 저장';
@@ -909,61 +1006,95 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     $('#s4body').innerHTML = ''; setStep(4, 'locked');
   }
 
-  /* 보관함 */
+  /* ---------- 보관함 ---------- */
+  async function loadVault() {
+    var text = (await readFile('keys/history.jsonl')) || '';
+    S.history = text.split('\n').filter(Boolean).map(function (l) { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean);
+    var dirs = [];
+    try { dirs = (await gh('GET', filePath('keys'))).filter(function (x) { return x.type === 'dir' && BID_RE.test(x.name); }); }
+    catch (e) { if (e.status !== 404) throw e; }
+    S.vault = await Promise.all(dirs.map(async function (d) {
+      var gen = S.history.filter(function (h) { return h.bidId === d.name && h.action === 'generate'; }).pop();
+      var commits = await gh('GET', repoPath('/commits?sha=' + BRANCH + '&per_page=1&path=' + encodeURIComponent('keys/' + d.name + '/public.pem')));
+      var first = commits[0];
+      return { bidId: d.name, hash: gen ? gen.hash : '', commit: first ? first.sha.slice(0, 7) : '-', commitUrl: first ? first.html_url : '', at: first ? new Date(first.commit.committer.date) : null };
+    }));
+    S.vault.sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
+    renderVault(); renderHistory();
+  }
   function renderVault() {
     var body = $('#vaultBody');
-    if (!S.connected) { body.innerHTML = '<div class="empty">저장소에 연결하면 키 목록이 보입니다. <a href="#connect">1단계에서 연결하세요.</a></div>'; return; }
+    if (!S.connected && !S.token) { body.innerHTML = '<div class="empty">저장소에 연결하면 키 목록이 보입니다. <a href="#connect">1단계에서 연결하세요.</a></div>'; return; }
     if (!S.vault.length) { body.innerHTML = '<div class="empty">이 저장소에 저장한 키가 아직 없습니다.</div>'; return; }
-    var rows = S.vault.slice().reverse().map(function (v) {
-      return '<tr class="' + (v.bidId === S.fresh ? 'fresh' : '') + '"><td data-l="입찰 ID" class="bid">' + esc(v.bidId) + '</td><td data-l="만든 시각">' + v.at + '</td>' +
-        '<td data-l="공개키 해시" class="hash">' + group(v.hash.slice(0, 16)) + '…</td><td data-l="커밋" class="mono">' + v.commit + '</td>' +
+    var rows = S.vault.map(function (v) {
+      return '<tr class="' + (v.bidId === S.fresh ? 'fresh' : '') + '"><td data-l="입찰 ID" class="bid">' + esc(v.bidId) + '</td><td data-l="만든 시각">' + (v.at ? fmt(v.at) : '-') + '</td>' +
+        '<td data-l="공개키 해시(앞 8자리)" class="hash">' + esc(v.hash || '-') + '</td>' +
+        '<td data-l="커밋" class="mono">' + (v.commitUrl ? '<a href="' + esc(v.commitUrl) + '" target="_blank" rel="noopener">' + v.commit + '</a>' : v.commit) + '</td>' +
         '<td data-l="내려받기"><div class="acts"><button class="sbtn" data-dl="pub" data-bid="' + esc(v.bidId) + '">공개키</button>' +
         '<button class="sbtn priv" data-dl="priv" data-bid="' + esc(v.bidId) + '">개인키</button>' +
         '<button class="sbtn" data-dl="both" data-bid="' + esc(v.bidId) + '">둘 다</button></div></td></tr>';
     }).join('');
-    body.innerHTML = '<table><thead><tr><th>입찰 ID</th><th>만든 시각</th><th>공개키 해시</th><th>커밋</th><th>내려받기</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    body.innerHTML = '<table><thead><tr><th>입찰 ID</th><th>만든 시각</th><th>공개키 해시(앞 8자리)</th><th>커밋</th><th>내려받기</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
-  $('#vaultBody').addEventListener('click', function (e) {
-    var b = e.target.closest('[data-dl]'); if (!b) return;
-    var v = S.vault.find(function (x) { return x.bidId === b.dataset.bid; }), w = b.dataset.dl;
-    if (w !== 'priv') { download(v.bidId + '_public.pem', v.pub); log({ bidId: v.bidId, action: 'download', file: 'public.pem' }); }
-    if (w !== 'pub') {
-      setTimeout(function () { download(v.bidId + '_private.pem', v.priv); }, w === 'both' ? 300 : 0);
-      log({ bidId: v.bidId, action: 'download', file: 'private.pem' });
-      toast('이 파일은 입찰 마감 후 유니피커 입찰시스템에 제출할 때만 쓰세요.', 'warn');
-    } else toast(v.bidId + ' 공개키를 내려받았습니다.');
+  $('#vaultBody').addEventListener('click', async function (e) {
+    var b = e.target.closest('[data-dl]'); if (!b || !S.connected) return;
+    var bid = b.dataset.bid, w = b.dataset.dl, files = w === 'both' ? ['public', 'private'] : [w === 'pub' ? 'public' : 'private'];
+    b.disabled = true;
+    try {
+      for (var i = 0; i < files.length; i++) {
+        var text = await readFile('keys/' + bid + '/' + files[i] + '.pem');
+        if (text === null) throw new GitHubError(404, bid + ' ' + files[i] + '.pem 파일이 저장소에 없습니다.');
+        download(bid + '_' + files[i] + '.pem', text);
+      }
+      if (files.indexOf('private') >= 0) toast('이 파일은 입찰 마감 후 유니피커 입찰시스템에 제출할 때만 쓰세요.', 'warn');
+      else toast(bid + ' 공개키를 내려받았습니다.');
+      // 내려받은 기록을 history.jsonl 에 남긴다. 실패해도 내려받기는 이미 끝났다.
+      try {
+        await commit([], files.map(function (f) { return { at: nowIso(), bidId: bid, action: 'download', file: f + '.pem' }; }),
+          'keys: ' + bid + ' ' + files.join(', ') + ' 내려받음 기록');
+        await loadVault();
+      } catch (err) { toast('내려받기 기록을 남기지 못했습니다. ' + err.message, 'warn'); }
+    } catch (err) {
+      toast(err.message, 'warn');
+    } finally { b.disabled = false; }
   });
-  $('#btnRefresh').onclick = function () {
+  $('#btnRefresh').onclick = async function () {
     if (!S.connected) { toast('먼저 GitHub에 연결하세요.', 'warn'); go('connect'); return; }
     var b = this; b.disabled = true; b.textContent = '불러오는 중…';
-    setTimeout(function () { b.disabled = false; b.textContent = '목록 다시 불러오기'; renderVault(); toast('키 ' + S.vault.length + '건을 불러왔습니다.'); }, 600);
+    try { await loadVault(); toast('키 ' + S.vault.length + '건을 불러왔습니다.'); }
+    catch (e) { toast(e.message, 'warn'); }
+    finally { b.disabled = false; b.textContent = '목록 다시 불러오기'; }
   };
 
-  /* 히스토리 */
+  /* ---------- 히스토리 ---------- */
   function renderHistory() {
-    if (!S.history.length) { $('#log').innerHTML = '<li class="muted" style="list-style:none">아직 기록이 없습니다.</li>'; $('#rawLog').textContent = ''; return; }
+    if (!S.history.length) {
+      $('#log').innerHTML = '<li class="muted" style="list-style:none">' + (S.connected ? '아직 기록이 없습니다.' : '저장소에 연결하면 기록이 보입니다.') + '</li>';
+      $('#rawLog').textContent = ''; return;
+    }
     $('#log').innerHTML = S.history.slice().reverse().map(function (h) {
-      var extra = h.action === 'download' ? h.file : 'sha256 ' + h.hash + (h.commit ? ', 커밋 ' + h.commit : '');
-      return '<li class="' + h.action + '"><time datetime="' + h.at + '">' + fmt(new Date(h.at)) + '</time><b class="mono">' + esc(h.bidId) + '</b> ' + ACTION[h.action] + ' <code>' + esc(extra) + '</code></li>';
+      var extra = h.action === 'download' ? h.file : 'sha256 ' + (h.hash || '');
+      return '<li class="' + esc(h.action) + '"><time datetime="' + esc(h.at) + '">' + fmt(new Date(h.at)) + '</time><b class="mono">' + esc(h.bidId) + '</b> ' + esc(ACTION[h.action] || h.action) + ' <code>' + esc(extra) + '</code></li>';
     }).join('');
     $('#rawLog').textContent = S.history.map(function (h) { return JSON.stringify(h); }).join('\n');
   }
 
-  /* GitHub 준비하기: #prep 링크로 이동하면 펼친다 */
+  /* ---------- 접기 섹션 ---------- */
   document.addEventListener('click', function (e) {
     var a = e.target.closest && e.target.closest('a[href="#prep"]');
     if (a) $('#prep').open = true;
     var b = e.target.closest && e.target.closest('a[href="#principle"]');
     if (b) $('#principle').open = true;
   }, true);
-  /* 페이지를 열 때는 두 섹션 모두 접힌 상태로 둔다 (주소에 #prep 등이 남아 있어도). */
   $('#prep').open = false; $('#principle').open = false;
 
-  /* 입찰 ID는 유니피커 입찰시스템이 전달한다. 목업은 주소의 ?bid= 값을 쓰고, 없으면 예시 값을 쓴다. */
-  var given = new URLSearchParams(location.search).get('bid');
-  $('#bidId').value = given && /^[\w-]{3,40}$/.test(given) ? given : 'B-2026-014';
+  /* ---------- 시작 ---------- */
+  /* 입찰 ID는 유니피커 입찰시스템 관리자 페이지의 링크(?bid=)로만 받는다. 없거나 형식이 틀리면 키를 만들지 않는다. */
+  var given = new URLSearchParams(location.search).get('bid') || '';
+  S.bidId = BID_RE.test(given) ? given : '';
+  $('#bidId').value = S.bidId || '(없음)';
   setStep(1, 'current'); setStep(2, 'locked'); setStep(3, 'locked'); setStep(4, 'locked');
-  genButtons(); renderVault(); renderHistory();
+  renderVault(); renderHistory();
 })();
 </script>
 </body>
