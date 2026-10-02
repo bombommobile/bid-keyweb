@@ -458,7 +458,7 @@
     <div class="done-sum">입찰 <code id="sumBid"></code> 공개키 해시 <code id="sumHash"></code></div>
     <div class="body">
       <p data-review-key="generate-p1">입찰 하나에 키 쌍 하나를 만듭니다. 키는 이 브라우저 안에서 만들어집니다.</p>
-      <div class="field" data-review-key="generate-field-bid"><label for="bidId">입찰 ID</label><input id="bidId" class="mono" value="" readonly aria-readonly="true" tabindex="-1"><div class="fhint">유니피커 입찰시스템 관리자 페이지의 링크로 이 화면을 열 때 전달되는 값입니다. 바꿀 수 없습니다.</div></div>
+      <div class="field" data-review-key="generate-field-bid"><label for="bidId">입찰 ID</label><input id="bidId" class="mono" value="" placeholder="예: B-2026-014" autocomplete="off" spellcheck="false"><div class="fhint" id="bidHint">유니피커 입찰시스템 화면에 있는 입찰 ID를 그대로 입력하세요. 영문, 숫자, 하이픈만 씁니다.</div></div>
       <div id="genResult"></div>
       <div class="actions" id="genActions"></div>
     </div>
@@ -730,7 +730,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
   var API = 'https://api.github.com';
   var BRANCH = 'main';
   var BID_RE = /^[A-Za-z0-9-]{3,40}$/;
-  var S = { connected: false, repo: '', token: '', bidId: '', key: null, saved: { pub: false, priv: false }, exportAt: null, fresh: null, vault: [], history: [] };
+  var S = { connected: false, repo: '', token: '', bidId: '', bidFromLink: false, key: null, saved: { pub: false, priv: false }, exportAt: null, fresh: null, vault: [], history: [] };
   var ACTION = { generate: '키 생성·GitHub 저장', download: 'GitHub에서 내려받음', 'export-pc': 'PC에 저장' };
 
   /* ---------- 공통 ---------- */
@@ -893,10 +893,6 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
   }
   function renderGenerate() {
     var out = $('#genResult');
-    if (!S.bidId) {
-      out.innerHTML = hint('stop', '<b>입찰 ID가 없습니다.</b> 유니피커 입찰시스템 관리자 페이지의 링크로 이 화면을 여세요.');
-      $('#genActions').innerHTML = ''; return;
-    }
     if (!(window.crypto && crypto.subtle)) {
       out.innerHTML = hint('stop', '이 브라우저는 키 만들기를 지원하지 않습니다. 최신 Chrome, Edge, Safari 를 쓰세요.');
       $('#genActions').innerHTML = ''; return;
@@ -906,7 +902,11 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     $('#btnGenerate').onclick = generate;
   }
   async function generate() {
-    var bidId = S.bidId, out = $('#genResult'), btn = $('#btnGenerate');
+    var bidId = S.bidFromLink ? S.bidId : $('#bidId').value.trim(), out = $('#genResult'), btn = $('#btnGenerate');
+    if (!BID_RE.test(bidId)) {
+      out.innerHTML = hint('stop', '입찰 ID를 확인하세요. 영문, 숫자, 하이픈으로 3~40자입니다.'); $('#bidId').focus(); return;
+    }
+    S.bidId = bidId;
     btn.disabled = true; btn.textContent = '저장소를 확인하는 중…';
     try {
       if ((await readFile('keys/' + bidId + '/public.pem')) !== null) {
@@ -919,6 +919,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     }
     btn.textContent = '키를 만드는 중…';
     var k = await makeKeys(); k.bidId = bidId; k.at = new Date(); S.key = k; S.saved = { pub: false, priv: false };
+    lockBid(true);                                     // 키를 만든 뒤에는 입찰 ID 를 바꾸지 못한다
     out.innerHTML =
       '<div class="keycard"><dl class="kv"><dt>입찰 ID</dt><dd><b class="mono">' + esc(bidId) + '</b></dd><dt>방식</dt><dd>RSA-OAEP 2048비트, SHA-256</dd><dt>만든 시각</dt><dd>' + fmt(k.at) + '</dd></dl>' +
       '<div class="hashlabel">공개키 해시 — 유니피커 입찰시스템에 표시되는 값과 대조합니다</div><div class="hashbox">' + group(k.hash) + '</div>' +
@@ -997,7 +998,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
   }
 
   function resetFrom(n) {
-    if (n <= 2) { S.key = null; $('#genResult').innerHTML = ''; $('#genActions').innerHTML = ''; setStep(2, 'locked'); }
+    if (n <= 2) { S.key = null; $('#genResult').innerHTML = ''; $('#genActions').innerHTML = ''; setStep(2, 'locked'); lockBid(S.bidFromLink); }
     S.saved = { pub: false, priv: false }; S.exportAt = null;
     ['#fPub', '#fPriv'].forEach(function (s) { var f = $(s); f.classList.remove('saved'); $('.fstate', f).textContent = '아직 저장하지 않음'; });
     $('[data-save="pub"]').innerHTML = '<svg class="i"><use href="#i-down"/></svg>공개키 저장';
@@ -1089,10 +1090,18 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
   $('#prep').open = false; $('#principle').open = false;
 
   /* ---------- 시작 ---------- */
-  /* 입찰 ID는 유니피커 입찰시스템 관리자 페이지의 링크(?bid=)로만 받는다. 없거나 형식이 틀리면 키를 만들지 않는다. */
+  /* 입찰 ID: 관리자 페이지 링크(?bid=)로 열면 그 값을 쓰고 잠근다. 링크 없이 열면 직접 입력한다. */
+  function lockBid(on) {
+    var el = $('#bidId');
+    el.readOnly = on; el.tabIndex = on ? -1 : 0;
+    if (on) el.setAttribute('aria-readonly', 'true'); else el.removeAttribute('aria-readonly');
+  }
   var given = new URLSearchParams(location.search).get('bid') || '';
-  S.bidId = BID_RE.test(given) ? given : '';
-  $('#bidId').value = S.bidId || '(없음)';
+  S.bidFromLink = BID_RE.test(given);
+  if (S.bidFromLink) {
+    S.bidId = given; $('#bidId').value = given; lockBid(true);
+    $('#bidHint').textContent = '유니피커 입찰시스템 관리자 페이지의 링크로 전달된 값입니다. 바꿀 수 없습니다.';
+  }
   setStep(1, 'current'); setStep(2, 'locked'); setStep(3, 'locked'); setStep(4, 'locked');
   renderVault(); renderHistory();
 })();
