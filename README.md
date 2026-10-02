@@ -15,11 +15,13 @@ HTML 파일 하나(`index.html`)이고, GitHub Pages 로 서비스한다.
 
 ## 사용
 
-입찰시스템 관리자 페이지가 입찰 ID 를 붙인 링크를 준다.
+입찰시스템 관리자 페이지가 키웹 링크를 준다. 키웹은 입찰 ID 를 받지 않는다(입찰시스템 하나가 입찰 하나만 관리한다).
 
 ```
-https://<소유자>.github.io/bid-keyweb/?bid=B-2026-014
+https://<소유자>.github.io/bid-keyweb/
 ```
+
+키를 만들 때 **키 이름**을 붙인다(필수, 1~30자, 한글 가능, 저장소 안에서 중복 불가). 이름은 보관함에서 키를 찾는 이름표다.
 
 ## 입찰시스템과 맞춰야 하는 값
 
@@ -29,5 +31,5 @@ https://<소유자>.github.io/bid-keyweb/?bid=B-2026-014
 | 공개키 형식 | SPKI PEM |
 | 개인키 형식 | PKCS#8 PEM |
 | 공개키 해시 | SHA-256(SPKI DER) 16진수 — 입찰시스템 `BidCrypto.publicKeyHash` 와 같다 |
-| 저장 경로 | `keys/{입찰ID}/public.pem`, `keys/{입찰ID}/private.pem`, `keys/history.jsonl` |
+| 저장 경로 | `keys/{날짜}_{해시8}/public.pem`, `private.pem`, `meta.json`(키 이름), `keys/history.jsonl` |
 | 브랜치 | `main` 고정 |

@@ -427,7 +427,7 @@
     <span class="emoji"><svg class="i" style="width:22px;height:22px;color:var(--text);"><use href="#i-key"/></svg></span>
     <h1 data-review-key="doc-title">입찰 키 관리</h1>
   </div>
-  <p class="lede" data-review-key="doc-lede">입찰 하나에 키 쌍 하나를 만들고, 귀사 GitHub 저장소에 보관합니다.</p>
+  <p class="lede" data-review-key="doc-lede">입찰에 쓸 키 쌍을 만들고, 귀사 GitHub 저장소에 보관합니다.</p>
 
   <div class="hint safe" data-review-key="notice-github-only">
     <span class="ico"><svg class="i"><use href="#i-shield"/></svg></span>
@@ -455,10 +455,10 @@
   <h2 id="generate" data-review-key="generate">2. 키 만들기 <span class="badge" data-badge="2"></span></h2>
   <section class="panel" id="p2" data-state="locked" data-review-key="generate-panel">
     <div class="locked-msg">1단계를 끝내면 열립니다.</div>
-    <div class="done-sum">입찰 <code id="sumBid"></code> 공개키 해시 <code id="sumHash"></code></div>
+    <div class="done-sum">키 이름 <code id="sumName"></code> 공개키 해시 <code id="sumHash"></code></div>
     <div class="body">
-      <p data-review-key="generate-p1">입찰 하나에 키 쌍 하나를 만듭니다. 키는 이 브라우저 안에서 만들어집니다.</p>
-      <div class="field" data-review-key="generate-field-bid"><label for="bidId">입찰 ID</label><input id="bidId" class="mono" value="" placeholder="예: B-2026-014" autocomplete="off" spellcheck="false"><div class="fhint" id="bidHint">유니피커 입찰시스템 화면에 있는 입찰 ID를 그대로 입력하세요. 영문, 숫자, 하이픈만 씁니다.</div></div>
+      <p data-review-key="generate-p1">키 쌍 하나를 만듭니다. 키는 이 브라우저 안에서 만들어집니다. 나중에 보관함에서 찾기 쉽도록 이름을 붙입니다.</p>
+      <div class="field" data-review-key="generate-field-name"><label for="keyName">키 이름</label><input id="keyName" value="" maxlength="30" placeholder="예: OO아파트 1차" autocomplete="off" spellcheck="false"><div class="fhint">이 저장소에서 겹치지 않는 이름을 붙입니다. 한글, 영문, 숫자, 공백을 쓸 수 있습니다. / \ : * ? " &lt; &gt; | 는 쓸 수 없습니다. 1~30자.</div></div>
       <div id="genResult"></div>
       <div class="actions" id="genActions"></div>
     </div>
@@ -729,8 +729,9 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
 
   var API = 'https://api.github.com';
   var BRANCH = 'main';
-  var BID_RE = /^[A-Za-z0-9-]{3,40}$/;
-  var S = { connected: false, repo: '', token: '', bidId: '', bidFromLink: false, key: null, saved: { pub: false, priv: false }, exportAt: null, fresh: null, vault: [], history: [] };
+  var KEY_ID_RE = /^\d{4}-\d{2}-\d{2}_[0-9a-f]{8}$/;          // 폴더 이름: 날짜_해시8
+  var NAME_BAD = /[\/\\:*?"<>|\u0000-\u001f\u007f]/;            // 키 이름에 쓸 수 없는 문자
+  var S = { connected: false, repo: '', token: '', key: null, saved: { pub: false, priv: false }, exportAt: null, fresh: null, vault: [], history: [] };
   var ACTION = { generate: '키 생성·GitHub 저장', download: 'GitHub에서 내려받음', 'export-pc': 'PC에 저장' };
 
   /* ---------- 공통 ---------- */
@@ -738,6 +739,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
   function group(h) { return h ? h.match(/.{1,4}/g).join(' ') : '-'; }
   function pad(n) { return String(n).padStart(2, '0'); }
   function fmt(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
   function nowIso() { return new Date().toISOString().replace(/\.\d+Z$/, 'Z'); }
   function hint(kind, html, icon) {
     var ic = icon || (kind === 'safe' ? 'shield' : 'alert');
@@ -761,6 +763,19 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     b.className = 'badge' + (st === 'current' ? ' cur' : st === 'done' ? ' done' : '');
     b.textContent = st === 'current' ? '진행 중' : st === 'done' ? '완료' : '대기';
   }
+
+  /* ---------- 키 이름 ---------- */
+  /** 저장용 이름: 유니코드 정규화(NFC), 앞뒤 공백 제거, 연속 공백 하나로. */
+  function cleanName(s) { return String(s || '').normalize('NFC').trim().replace(/\s+/g, ' '); }
+  /** 중복 비교용: 대소문자 무시. */
+  function nameKey(s) { return cleanName(s).toLowerCase(); }
+  function nameError(name) {
+    if (!name) return '키 이름을 입력하세요.';
+    if (name.length > 30) return '키 이름은 30자 이하로 입력하세요.';
+    if (NAME_BAD.test(name)) return '키 이름에 / \\ : * ? " < > | 는 쓸 수 없습니다.';
+    return '';
+  }
+  function fileName(v, kind) { return v.name + '_' + v.hash8 + '_' + kind + '.pem'; }
 
   /* ---------- GitHub API ---------- */
   function GitHubError(status, message) { this.status = status; this.message = message; }
@@ -790,23 +805,32 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
   function repoPath(p) { return '/repos/' + S.repo + p; }
   function filePath(path) { return repoPath('/contents/' + path.split('/').map(encodeURIComponent).join('/') + '?ref=' + BRANCH); }
 
-  /** 파일 내용을 읽는다. 없으면 null. */
   async function readFile(path) {
     try { return await gh('GET', filePath(path), null, true); }
     catch (e) { if (e.status === 404) return null; throw e; }
   }
 
+  /** keys/ 아래 키 폴더와 meta.json 을 읽는다. */
+  async function readKeys() {
+    var dirs = [];
+    try { dirs = (await gh('GET', filePath('keys'))).filter(function (x) { return x.type === 'dir' && KEY_ID_RE.test(x.name); }); }
+    catch (e) { if (e.status !== 404) throw e; }
+    return Promise.all(dirs.map(async function (d) {
+      var meta = {};
+      try { meta = JSON.parse((await readFile('keys/' + d.name + '/meta.json')) || '{}'); } catch (e) { meta = {}; }
+      return { keyId: d.name, name: cleanName(meta.name) || d.name, hash8: d.name.slice(11), hash: meta.hash || '' };
+    }));
+  }
+
   /**
    * 파일 여러 개와 history.jsonl 추가분을 커밋 하나로 저장한다(Git Data API).
-   * mustNotExist 경로가 이미 있으면 저장하지 않는다. 그사이 다른 커밋이 끼어들면 처음부터 다시 한다.
+   * precheck 는 매 시도마다 최신 상태로 다시 확인한다(이름 중복 등). 그사이 다른 커밋이 끼어들면 처음부터 다시 한다.
    */
-  async function commit(files, historyLines, message, mustNotExist) {
+  async function commit(files, historyLines, message, precheck) {
     for (var attempt = 0; attempt < 3; attempt++) {
       var ref = await gh('GET', repoPath('/git/ref/heads/' + BRANCH));
       var parent = await gh('GET', repoPath('/git/commits/' + ref.object.sha));
-      if (mustNotExist && (await readFile(mustNotExist)) !== null) {
-        throw new GitHubError(409, '이 입찰의 키가 이미 저장소에 있습니다. 한 입찰에는 키를 한 번만 만듭니다.');
-      }
+      if (precheck) await precheck();
       var tree = files.slice();
       if (historyLines.length) {
         var old = (await readFile('keys/history.jsonl')) || '';
@@ -822,7 +846,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
         await gh('PATCH', repoPath('/git/refs/heads/' + BRANCH), { sha: newCommit.sha, force: false });
         return newCommit;
       } catch (e) {
-        if (e.status !== 422 && e.status !== 409) throw e;   // 다른 커밋이 먼저 들어왔다 → 다시
+        if (e.status !== 422 && e.status !== 409) throw e;
       }
     }
     throw new GitHubError(409, '저장소가 계속 바뀌고 있어 저장하지 못했습니다. 잠시 뒤 다시 시도하세요.');
@@ -855,11 +879,11 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
       out.innerHTML = '<ul class="checks"><li>' + checks.join('</li><li>') + '</li></ul>' +
         '<p class="fhint">쓰기 권한은 4단계에서 저장할 때 확인합니다.</p>';
       S.connected = true;
-      $('#token').value = '';                          // 토큰은 입력란에서 지우고 메모리에만 둔다
+      $('#token').value = '';
       $('#repoChip').classList.add('on'); $('#repoName').textContent = repo; $('#disconnect').hidden = false;
       $('#sumRepo').textContent = repo; $('#sumBranch').textContent = BRANCH; $('#vaultRepo').textContent = repo;
       toast('저장소를 확인했습니다.');
-      setStep(1, 'done'); setStep(2, 'current'); renderGenerate(); go('generate');
+      setStep(1, 'done'); setStep(2, 'current'); renderGenerate(); go('generate'); $('#keyName').focus();
     } catch (e) {
       S.token = '';
       out.innerHTML = hint('stop', e.message) + (checks.length ? '<ul class="checks"><li>' + checks.join('</li><li>') + '</li></ul>' : '');
@@ -891,6 +915,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
       hash: hex(await crypto.subtle.digest('SHA-256', spki))
     };
   }
+  function lockName(on) { var el = $('#keyName'); el.readOnly = on; el.tabIndex = on ? -1 : 0; }
   function renderGenerate() {
     var out = $('#genResult');
     if (!(window.crypto && crypto.subtle)) {
@@ -901,44 +926,49 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     $('#genActions').innerHTML = '<button class="btn" id="btnGenerate">키 만들기</button>';
     $('#btnGenerate').onclick = generate;
   }
+  function nameTaken(name, list) {
+    var k = nameKey(name);
+    return list.some(function (v) { return nameKey(v.name) === k; });
+  }
   async function generate() {
-    var bidId = S.bidFromLink ? S.bidId : $('#bidId').value.trim(), out = $('#genResult'), btn = $('#btnGenerate');
-    if (!BID_RE.test(bidId)) {
-      out.innerHTML = hint('stop', '입찰 ID를 확인하세요. 영문, 숫자, 하이픈으로 3~40자입니다.'); $('#bidId').focus(); return;
-    }
-    S.bidId = bidId;
-    btn.disabled = true; btn.textContent = '저장소를 확인하는 중…';
+    var name = cleanName($('#keyName').value), out = $('#genResult'), btn = $('#btnGenerate');
+    var err = nameError(name);
+    if (err) { out.innerHTML = hint('stop', err); $('#keyName').focus(); return; }
+    btn.disabled = true; btn.textContent = '이름을 확인하는 중…';
     try {
-      if ((await readFile('keys/' + bidId + '/public.pem')) !== null) {
-        out.innerHTML = hint('stop', '<b>' + esc(bidId) + '의 키가 이미 저장소에 있습니다.</b> 한 입찰에는 키를 한 번만 만듭니다. 보관함에서 기존 키를 내려받으세요.') +
-          '<div class="actions"><a class="btn ghost" href="#vault">보관함으로 이동</a></div>';
-        btn.disabled = false; btn.textContent = '키 만들기'; return;
+      S.vault = await readKeys(); renderVault();
+      if (nameTaken(name, S.vault)) {
+        out.innerHTML = hint('stop', '<b>「' + esc(name) + '」 이름의 키가 이미 있습니다.</b> 다른 이름을 입력하세요.');
+        btn.disabled = false; btn.textContent = '키 만들기'; $('#keyName').focus(); return;
       }
     } catch (e) {
       out.innerHTML = hint('stop', e.message); btn.disabled = false; btn.textContent = '키 만들기'; return;
     }
     btn.textContent = '키를 만드는 중…';
-    var k = await makeKeys(); k.bidId = bidId; k.at = new Date(); S.key = k; S.saved = { pub: false, priv: false };
-    lockBid(true);                                     // 키를 만든 뒤에는 입찰 ID 를 바꾸지 못한다
+    var k = await makeKeys();
+    k.name = name; k.at = new Date(); k.hash8 = k.hash.slice(0, 8); k.keyId = ymd(k.at) + '_' + k.hash8;
+    S.key = k; S.saved = { pub: false, priv: false };
+    $('#keyName').value = name; lockName(true);         // 키를 만든 뒤에는 이름을 바꾸지 못한다
     out.innerHTML =
-      '<div class="keycard"><dl class="kv"><dt>입찰 ID</dt><dd><b class="mono">' + esc(bidId) + '</b></dd><dt>방식</dt><dd>RSA-OAEP 2048비트, SHA-256</dd><dt>만든 시각</dt><dd>' + fmt(k.at) + '</dd></dl>' +
+      '<div class="keycard"><dl class="kv"><dt>키 이름</dt><dd><b>' + esc(name) + '</b></dd><dt>저장 폴더</dt><dd class="mono">keys/' + k.keyId + '/</dd>' +
+      '<dt>방식</dt><dd>RSA-OAEP 2048비트, SHA-256</dd><dt>만든 시각</dt><dd>' + fmt(k.at) + '</dd></dl>' +
       '<div class="hashlabel">공개키 해시 — 유니피커 입찰시스템에 표시되는 값과 대조합니다</div><div class="hashbox">' + group(k.hash) + '</div>' +
       '<details class="pem"><summary>공개키 내용 보기</summary><pre><code>' + esc(k.pub) + '</code></pre></details></div>' +
       hint('safe', '키는 이 브라우저 안에서 만들어졌습니다. 아직 어디에도 전송되지 않았습니다.');
     $('#genActions').innerHTML = '<button class="btn" id="btnToPc">다음: PC에 저장</button><button class="btn ghost" id="btnRegen">버리고 다시 만들기</button>';
     $('#btnToPc').onclick = function () {
-      $('#sumBid').textContent = bidId; $('#sumHash').textContent = k.hash.slice(0, 8);
-      $('#fPubName').textContent = bidId + '_public.pem'; $('#fPrivName').textContent = bidId + '_private.pem';
+      $('#sumName').textContent = name; $('#sumHash').textContent = k.hash8;
+      $('#fPubName').textContent = fileName(k, 'public'); $('#fPrivName').textContent = fileName(k, 'private');
       setStep(2, 'done'); setStep(3, 'current'); go('pc');
     };
-    $('#btnRegen').onclick = function () { resetFrom(2); setStep(2, 'current'); toast('만든 키를 버렸습니다. 저장한 적이 없어 기록도 남지 않습니다.'); };
+    $('#btnRegen').onclick = function () { resetFrom(2); setStep(2, 'current'); renderGenerate(); toast('만든 키를 버렸습니다. 저장한 적이 없어 기록도 남지 않습니다.'); };
   }
 
   /* ---------- 3. PC 저장 ---------- */
   $$('[data-save]').forEach(function (b) {
     b.onclick = function () {
       var w = b.dataset.save, k = S.key;
-      download(k.bidId + '_' + (w === 'pub' ? 'public' : 'private') + '.pem', w === 'pub' ? k.pub : k.priv);
+      download(fileName(k, w === 'pub' ? 'public' : 'private'), w === 'pub' ? k.pub : k.priv);
       S.saved[w] = true;
       var box = w === 'pub' ? $('#fPub') : $('#fPriv');
       box.classList.add('saved'); $('.fstate', box).textContent = 'PC에 저장함 (' + fmt(new Date()).slice(11) + ')';
@@ -954,13 +984,13 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
 
   /* ---------- 4. GitHub 저장 ---------- */
   function renderS4() {
-    var k = S.key, b = $('#s4body');
+    var k = S.key, b = $('#s4body'), dir = 'keys/' + k.keyId + '/';
     b.innerHTML =
       '<dl class="kv"><dt>저장소</dt><dd class="mono">' + esc(S.repo) + ' (' + BRANCH + ')</dd>' +
-      '<dt>올릴 파일</dt><dd class="mono">keys/' + esc(k.bidId) + '/public.pem<br>keys/' + esc(k.bidId) + '/private.pem<br>keys/history.jsonl (두 줄 추가)</dd></dl>' +
-      '<div class="confirm">' + hint('stop', '<b>저장한 키는 바꿀 수 없습니다.</b> 입찰 ID가 유니피커 입찰시스템 화면의 입찰 ID와 같은지 확인하세요.') +
-      '<p style="margin:0 0 10px;font-size:14px">입찰 ID <b class="mono">' + esc(k.bidId) + '</b>, 해시 <span class="mono">' + k.hash.slice(0, 8) + '</span></p>' +
-      '<div class="actions"><button class="btn danger" id="btnCommit">' + esc(k.bidId) + ' 키를 GitHub에 저장</button><button class="btn ghost" id="btnBack">취소</button></div></div>' +
+      '<dt>올릴 파일</dt><dd class="mono">' + dir + 'public.pem<br>' + dir + 'private.pem<br>' + dir + 'meta.json (키 이름)<br>keys/history.jsonl (두 줄 추가)</dd></dl>' +
+      '<div class="confirm">' + hint('stop', '<b>저장한 키는 바꿀 수 없습니다.</b> 키 이름이 맞는지 확인하세요.') +
+      '<p style="margin:0 0 10px;font-size:14px">키 이름 <b>' + esc(k.name) + '</b>, 해시 <span class="mono">' + k.hash8 + '</span></p>' +
+      '<div class="actions"><button class="btn danger" id="btnCommit">「' + esc(k.name) + '」 키를 GitHub에 저장</button><button class="btn ghost" id="btnBack">취소</button></div></div>' +
       '<div class="progress" hidden><i></i></div><div id="commitOut"></div>';
     $('#btnBack').onclick = function () { resetFrom(2); setStep(2, 'current'); renderGenerate(); go('generate'); };
     $('#btnCommit').onclick = async function () {
@@ -968,27 +998,32 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
       btn.disabled = true; $('#btnBack').disabled = true; bar.hidden = false; out.innerHTML = '';
       requestAnimationFrame(function () { $('i', bar).style.width = '70%'; });
       try {
+        var meta = JSON.stringify({ name: k.name, keyId: k.keyId, hash: k.hash, createdAt: k.at.toISOString() }, null, 2) + '\n';
         var c = await commit(
-          [{ path: 'keys/' + k.bidId + '/public.pem', content: k.pub }, { path: 'keys/' + k.bidId + '/private.pem', content: k.priv }],
-          [{ at: S.exportAt, bidId: k.bidId, action: 'export-pc', hash: k.hash.slice(0, 8) },
-           { at: nowIso(), bidId: k.bidId, action: 'generate', hash: k.hash.slice(0, 8) }],
-          'keys: ' + k.bidId + ' 키 생성 (sha256 ' + k.hash.slice(0, 8) + ')',
-          'keys/' + k.bidId + '/public.pem');
+          [{ path: dir + 'public.pem', content: k.pub }, { path: dir + 'private.pem', content: k.priv }, { path: dir + 'meta.json', content: meta }],
+          [{ at: S.exportAt, keyId: k.keyId, name: k.name, action: 'export-pc', hash: k.hash8 },
+           { at: nowIso(), keyId: k.keyId, name: k.name, action: 'generate', hash: k.hash8 }],
+          'keys: ' + k.name + ' (' + k.keyId + ') 키 생성',
+          async function () {                                       // 매 시도마다 최신 상태로 다시 확인
+            var list = await readKeys();
+            if (list.some(function (v) { return v.keyId === k.keyId; })) throw new GitHubError(409, '같은 폴더(' + k.keyId + ')가 이미 있습니다.');
+            if (nameTaken(k.name, list)) throw new GitHubError(409, '「' + k.name + '」 이름의 키가 그사이 저장되었습니다. 취소하고 다른 이름으로 다시 만드세요.');
+          });
         $('i', bar).style.width = '100%';
-        S.fresh = k.bidId;
+        S.fresh = k.keyId;
         $('.confirm', b).remove(); bar.hidden = true;
         out.innerHTML = hint('safe', '<b>GitHub에 저장했습니다.</b> 커밋 SHA와 시각이 키를 만든 시점의 기록이 됩니다. 이 기록은 귀사 저장소에만 있습니다.') +
           '<dl class="kv"><dt>커밋</dt><dd class="mono"><a href="' + esc(c.html_url) + '" target="_blank" rel="noopener">' + c.sha + '</a></dd>' +
           '<dt>시각</dt><dd>' + fmt(new Date(c.committer.date)) + '</dd><dt>메시지</dt><dd class="mono">' + esc(c.message) + '</dd></dl>' +
           '<div class="nextstep" data-review-key="github-next-step"><b>다음 할 일</b>' +
-          '<ol class="howto"><li>유니피커 입찰시스템 관리자 페이지에 공개키 파일 <code>' + esc(k.bidId) + '_public.pem</code>을 올립니다. <b>개인키는 올리지 않습니다.</b></li>' +
+          '<ol class="howto"><li>유니피커 입찰시스템 관리자 페이지에 공개키 파일 <code>' + esc(fileName(k, 'public')) + '</code>을 올립니다. <b>개인키는 올리지 않습니다.</b></li>' +
           '<li>관리자 페이지에 표시된 해시가 아래 값과 같은지 확인하고 확정합니다.</li></ol>' +
           '<div class="hashbox">' + group(k.hash) + '</div>' +
           '<p class="fhint" style="margin-top:8px">개인키는 입찰이 마감된 뒤에 같은 관리자 페이지에서 제출합니다.</p></div>' +
           '<div class="actions"><a class="btn" href="#vault">보관함에서 보기</a></div>';
         $('[data-badge="4"]').className = 'badge done'; $('[data-badge="4"]').textContent = '완료';
-        toast(k.bidId + ' 키를 GitHub에 저장했습니다.');
-        loadVault().catch(function () { /* 목록 갱신 실패는 무시 — 다시 불러오기로 해결 */ });
+        toast('「' + k.name + '」 키를 GitHub에 저장했습니다.');
+        loadVault().catch(function () { /* 목록 갱신 실패는 다시 불러오기로 해결 */ });
       } catch (e) {
         bar.hidden = true; $('i', bar).style.width = '0';
         btn.disabled = false; $('#btnBack').disabled = false;
@@ -998,7 +1033,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
   }
 
   function resetFrom(n) {
-    if (n <= 2) { S.key = null; $('#genResult').innerHTML = ''; $('#genActions').innerHTML = ''; setStep(2, 'locked'); lockBid(S.bidFromLink); }
+    if (n <= 2) { S.key = null; $('#genResult').innerHTML = ''; $('#genActions').innerHTML = ''; setStep(2, 'locked'); lockName(false); }
     S.saved = { pub: false, priv: false }; S.exportAt = null;
     ['#fPub', '#fPriv'].forEach(function (s) { var f = $(s); f.classList.remove('saved'); $('.fstate', f).textContent = '아직 저장하지 않음'; });
     $('[data-save="pub"]').innerHTML = '<svg class="i"><use href="#i-down"/></svg>공개키 저장';
@@ -1011,14 +1046,14 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
   async function loadVault() {
     var text = (await readFile('keys/history.jsonl')) || '';
     S.history = text.split('\n').filter(Boolean).map(function (l) { try { return JSON.parse(l); } catch (e) { return null; } }).filter(Boolean);
-    var dirs = [];
-    try { dirs = (await gh('GET', filePath('keys'))).filter(function (x) { return x.type === 'dir' && BID_RE.test(x.name); }); }
-    catch (e) { if (e.status !== 404) throw e; }
-    S.vault = await Promise.all(dirs.map(async function (d) {
-      var gen = S.history.filter(function (h) { return h.bidId === d.name && h.action === 'generate'; }).pop();
-      var commits = await gh('GET', repoPath('/commits?sha=' + BRANCH + '&per_page=1&path=' + encodeURIComponent('keys/' + d.name + '/public.pem')));
+    var keys = await readKeys();
+    S.vault = await Promise.all(keys.map(async function (v) {
+      var commits = await gh('GET', repoPath('/commits?sha=' + BRANCH + '&per_page=1&path=' + encodeURIComponent('keys/' + v.keyId + '/public.pem')));
       var first = commits[0];
-      return { bidId: d.name, hash: gen ? gen.hash : '', commit: first ? first.sha.slice(0, 7) : '-', commitUrl: first ? first.html_url : '', at: first ? new Date(first.commit.committer.date) : null };
+      v.commit = first ? first.sha.slice(0, 7) : '-';
+      v.commitUrl = first ? first.html_url : '';
+      v.at = first ? new Date(first.commit.committer.date) : null;
+      return v;
     }));
     S.vault.sort(function (a, b) { return (b.at || 0) - (a.at || 0); });
     renderVault(); renderHistory();
@@ -1028,31 +1063,32 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     if (!S.connected && !S.token) { body.innerHTML = '<div class="empty">저장소에 연결하면 키 목록이 보입니다. <a href="#connect">1단계에서 연결하세요.</a></div>'; return; }
     if (!S.vault.length) { body.innerHTML = '<div class="empty">이 저장소에 저장한 키가 아직 없습니다.</div>'; return; }
     var rows = S.vault.map(function (v) {
-      return '<tr class="' + (v.bidId === S.fresh ? 'fresh' : '') + '"><td data-l="입찰 ID" class="bid">' + esc(v.bidId) + '</td><td data-l="만든 시각">' + (v.at ? fmt(v.at) : '-') + '</td>' +
-        '<td data-l="공개키 해시(앞 8자리)" class="hash">' + esc(v.hash || '-') + '</td>' +
+      return '<tr class="' + (v.keyId === S.fresh ? 'fresh' : '') + '"><td data-l="키 이름"><b>' + esc(v.name) + '</b><div class="mono" style="color:var(--faint);font-size:12px">' + esc(v.keyId) + '</div></td>' +
+        '<td data-l="만든 시각">' + (v.at ? fmt(v.at) : '-') + '</td>' +
+        '<td data-l="공개키 해시(앞 8자리)" class="hash">' + esc(v.hash8) + '</td>' +
         '<td data-l="커밋" class="mono">' + (v.commitUrl ? '<a href="' + esc(v.commitUrl) + '" target="_blank" rel="noopener">' + v.commit + '</a>' : v.commit) + '</td>' +
-        '<td data-l="내려받기"><div class="acts"><button class="sbtn" data-dl="pub" data-bid="' + esc(v.bidId) + '">공개키</button>' +
-        '<button class="sbtn priv" data-dl="priv" data-bid="' + esc(v.bidId) + '">개인키</button>' +
-        '<button class="sbtn" data-dl="both" data-bid="' + esc(v.bidId) + '">둘 다</button></div></td></tr>';
+        '<td data-l="내려받기"><div class="acts"><button class="sbtn" data-dl="pub" data-key="' + esc(v.keyId) + '">공개키</button>' +
+        '<button class="sbtn priv" data-dl="priv" data-key="' + esc(v.keyId) + '">개인키</button>' +
+        '<button class="sbtn" data-dl="both" data-key="' + esc(v.keyId) + '">둘 다</button></div></td></tr>';
     }).join('');
-    body.innerHTML = '<table><thead><tr><th>입찰 ID</th><th>만든 시각</th><th>공개키 해시(앞 8자리)</th><th>커밋</th><th>내려받기</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    body.innerHTML = '<table><thead><tr><th>키 이름</th><th>만든 시각</th><th>공개키 해시(앞 8자리)</th><th>커밋</th><th>내려받기</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
   $('#vaultBody').addEventListener('click', async function (e) {
     var b = e.target.closest('[data-dl]'); if (!b || !S.connected) return;
-    var bid = b.dataset.bid, w = b.dataset.dl, files = w === 'both' ? ['public', 'private'] : [w === 'pub' ? 'public' : 'private'];
+    var v = S.vault.find(function (x) { return x.keyId === b.dataset.key; }); if (!v) return;
+    var w = b.dataset.dl, kinds = w === 'both' ? ['public', 'private'] : [w === 'pub' ? 'public' : 'private'];
     b.disabled = true;
     try {
-      for (var i = 0; i < files.length; i++) {
-        var text = await readFile('keys/' + bid + '/' + files[i] + '.pem');
-        if (text === null) throw new GitHubError(404, bid + ' ' + files[i] + '.pem 파일이 저장소에 없습니다.');
-        download(bid + '_' + files[i] + '.pem', text);
+      for (var i = 0; i < kinds.length; i++) {
+        var text = await readFile('keys/' + v.keyId + '/' + kinds[i] + '.pem');
+        if (text === null) throw new GitHubError(404, '「' + v.name + '」의 ' + kinds[i] + '.pem 파일이 저장소에 없습니다.');
+        download(fileName(v, kinds[i]), text);
       }
-      if (files.indexOf('private') >= 0) toast('이 파일은 입찰 마감 후 유니피커 입찰시스템에 제출할 때만 쓰세요.', 'warn');
-      else toast(bid + ' 공개키를 내려받았습니다.');
-      // 내려받은 기록을 history.jsonl 에 남긴다. 실패해도 내려받기는 이미 끝났다.
+      if (kinds.indexOf('private') >= 0) toast('이 파일은 입찰 마감 후 유니피커 입찰시스템에 제출할 때만 쓰세요.', 'warn');
+      else toast('「' + v.name + '」 공개키를 내려받았습니다.');
       try {
-        await commit([], files.map(function (f) { return { at: nowIso(), bidId: bid, action: 'download', file: f + '.pem' }; }),
-          'keys: ' + bid + ' ' + files.join(', ') + ' 내려받음 기록');
+        await commit([], kinds.map(function (f) { return { at: nowIso(), keyId: v.keyId, name: v.name, action: 'download', file: f + '.pem' }; }),
+          'keys: ' + v.name + ' (' + v.keyId + ') ' + kinds.join(', ') + ' 내려받음 기록');
         await loadVault();
       } catch (err) { toast('내려받기 기록을 남기지 못했습니다. ' + err.message, 'warn'); }
     } catch (err) {
@@ -1075,7 +1111,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     }
     $('#log').innerHTML = S.history.slice().reverse().map(function (h) {
       var extra = h.action === 'download' ? h.file : 'sha256 ' + (h.hash || '');
-      return '<li class="' + esc(h.action) + '"><time datetime="' + esc(h.at) + '">' + fmt(new Date(h.at)) + '</time><b class="mono">' + esc(h.bidId) + '</b> ' + esc(ACTION[h.action] || h.action) + ' <code>' + esc(extra) + '</code></li>';
+      return '<li class="' + esc(h.action) + '"><time datetime="' + esc(h.at) + '">' + fmt(new Date(h.at)) + '</time><b>' + esc(h.name || h.keyId || '') + '</b> ' + esc(ACTION[h.action] || h.action) + ' <code>' + esc(extra) + '</code></li>';
     }).join('');
     $('#rawLog').textContent = S.history.map(function (h) { return JSON.stringify(h); }).join('\n');
   }
@@ -1090,18 +1126,6 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
   $('#prep').open = false; $('#principle').open = false;
 
   /* ---------- 시작 ---------- */
-  /* 입찰 ID: 관리자 페이지 링크(?bid=)로 열면 그 값을 쓰고 잠근다. 링크 없이 열면 직접 입력한다. */
-  function lockBid(on) {
-    var el = $('#bidId');
-    el.readOnly = on; el.tabIndex = on ? -1 : 0;
-    if (on) el.setAttribute('aria-readonly', 'true'); else el.removeAttribute('aria-readonly');
-  }
-  var given = new URLSearchParams(location.search).get('bid') || '';
-  S.bidFromLink = BID_RE.test(given);
-  if (S.bidFromLink) {
-    S.bidId = given; $('#bidId').value = given; lockBid(true);
-    $('#bidHint').textContent = '유니피커 입찰시스템 관리자 페이지의 링크로 전달된 값입니다. 바꿀 수 없습니다.';
-  }
   setStep(1, 'current'); setStep(2, 'locked'); setStep(3, 'locked'); setStep(4, 'locked');
   renderVault(); renderHistory();
 })();
