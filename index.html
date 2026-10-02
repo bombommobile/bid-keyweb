@@ -1021,7 +1021,8 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
           '<li>관리자 페이지에 표시된 해시가 아래 값과 같은지 확인하고 확정합니다.</li></ol>' +
           '<div class="hashbox">' + group(k.hash) + '</div>' +
           '<p class="fhint" style="margin-top:8px">개인키는 입찰이 마감된 뒤에 같은 관리자 페이지에서 제출합니다.</p></div>' +
-          '<div class="actions"><a class="btn" href="#vault">보관함에서 보기</a></div>';
+          '<div class="actions"><button class="btn" id="btnNewKey">새 키 만들기</button><a class="btn ghost" href="#vault">보관함에서 보기</a></div>';
+        $('#btnNewKey').onclick = newKey;
         $('[data-badge="4"]').className = 'badge done'; $('[data-badge="4"]').textContent = '완료';
         toast('「' + k.name + '」 키를 GitHub에 저장했습니다.');
         loadVault().catch(function () { /* 목록 갱신 실패는 다시 불러오기로 해결 */ });
@@ -1031,6 +1032,11 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
         out.innerHTML = hint('stop', '<b>저장하지 못했습니다.</b> ' + e.message);
       }
     };
+  }
+
+  /** 연결은 그대로 두고 2단계부터 다시 시작한다. */
+  function newKey() {
+    resetFrom(2); $('#keyName').value = ''; setStep(2, 'current'); renderGenerate(); go('generate'); $('#keyName').focus();
   }
 
   function resetFrom(n) {
