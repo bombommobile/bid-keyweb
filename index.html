@@ -273,6 +273,13 @@
   @media (max-width:767px){.keypair,.fork{grid-template-columns:1fr}}
   .nextstep{border:1.5px solid var(--text);border-radius:10px;padding:14px 16px;margin:14px 0}
   .nextstep>b{display:block;margin-bottom:4px}
+  .red{color:var(--red)}
+  dialog#dlg{border:1px solid var(--line);border-radius:12px;padding:20px 22px;max-width:min(520px,calc(100vw - 32px));box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  dialog#dlg::backdrop{background:rgba(0,0,0,.35)}
+  dialog#dlg h3{margin:0 0 10px;font-size:17px}
+  dialog#dlg #dlgBody{font-size:14.5px}
+  dialog#dlg #dlgBody ul{margin:8px 0;padding-left:20px}
+  dialog#dlg .actions{margin-top:16px;justify-content:flex-end}
   .row2{display:grid;grid-template-columns:2fr 1fr;gap:14px}
   .field{margin-bottom:14px}
   .field label{display:block;font-weight:600;font-size:14px;margin-bottom:5px}
@@ -437,7 +444,7 @@
 <!-- 1 -->
   <h2 id="connect" data-review-key="connect">1. GitHub 연결 <span class="badge" data-badge="1"></span></h2>
   <section class="panel" id="p1" data-state="current" data-review-key="connect-panel">
-    <div class="done-sum" data-review-key="connect-summary">저장소 <code id="sumRepo"></code> 브랜치 <code id="sumBranch"></code> <button class="linkbtn" id="reopen1">바꾸기</button> <button class="linkbtn" id="btnRemember">브라우저에 저장</button><span class="fhint" id="rememberState" hidden>브라우저에 저장됨</span></div>
+    <div class="done-sum" data-review-key="connect-summary">저장소 <code id="sumRepo"></code> 브랜치 <code id="sumBranch"></code> <button class="linkbtn" id="reopen1">바꾸기</button> <span class="fhint" id="rememberState" hidden>· 브라우저에 저장됨</span></div>
     <div class="body">
       <p data-review-key="connect-p1">키를 보관할 귀사 GitHub 저장소를 지정하세요. 저장소나 토큰이 없다면 먼저 <a href="#prep">GitHub 준비하기</a>를 따라 하세요.</p>
       <div class="row2">
@@ -447,7 +454,7 @@
       <div class="field" data-review-key="connect-field-token"><label for="token">접근 토큰</label><input id="token" class="mono" type="password" value="" placeholder="github_pat_로 시작하는 값" autocomplete="off"><div class="fhint">Fine-grained PAT. 이 저장소에만 Contents 읽기·쓰기 권한을 주세요.</div></div>
       <div class="hint safe" data-review-key="connect-safe-token"><span class="ico"><svg class="i"><use href="#i-lock"/></svg></span><div>토큰은 이 페이지 메모리에만 있고, 페이지를 닫으면 사라집니다. 연결한 뒤 「브라우저에 저장」을 고른 경우에만 이 브라우저에 저장됩니다(권하지 않음).</div></div>
       <div id="connectResult"></div>
-      <div class="actions"><button class="btn" id="btnConnect" data-review-key="connect-btn">저장소 확인</button></div>
+      <div class="actions"><button class="btn" id="btnConnect" data-review-key="connect-btn">저장소 확인</button><button class="btn ghost" id="btnConnectSave" data-review-key="connect-btn-save">브라우저에 저장</button></div><p class="fhint" data-review-key="connect-save-hint">「브라우저에 저장」은 저장소를 확인한 뒤 저장소와 토큰을 이 브라우저에 저장합니다. 다음에 열면 자동으로 연결합니다. 보안을 위해 권하지 않습니다.</p>
     </div>
   </section>
 
@@ -721,6 +728,11 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
 })();
 </script>
 <div class="toasts" id="toasts" aria-live="polite"></div>
+<dialog id="dlg" data-review-key="dialog">
+  <h3 id="dlgTitle"></h3>
+  <div id="dlgBody"></div>
+  <div class="actions"><button class="btn" id="dlgOk">확인</button><button class="btn ghost" id="dlgCancel">취소</button></div>
+</dialog>
 <script>
 /* ===== 키웹 — GitHub API(api.github.com)하고만 통신한다. 토큰은 이 페이지 메모리에만 둔다. ===== */
 (function () {
@@ -854,26 +866,39 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
   }
 
   /* ---------- 1. 연결 ---------- */
+  /* ---------- 페이지 안 확인 대화상자 (브라우저 confirm 은 막혀 있을 수 있다) ---------- */
+  function ask(title, html, okLabel, danger) {
+    return new Promise(function (resolve) {
+      var d = $('#dlg'), ok = $('#dlgOk'), cancel = $('#dlgCancel');
+      $('#dlgTitle').textContent = title; $('#dlgBody').innerHTML = html;
+      ok.textContent = okLabel || '확인'; ok.className = 'btn' + (danger ? ' danger' : '');
+      function done(v) { ok.onclick = cancel.onclick = d.oncancel = null; d.close(); resolve(v); }
+      ok.onclick = function () { done(true); };
+      cancel.onclick = function () { done(false); };
+      d.oncancel = function (e) { e.preventDefault(); done(false); };   // Esc
+      d.showModal(); cancel.focus();
+    });
+  }
+
   /* ---------- 브라우저 저장 (사용자가 경고를 보고 고른 경우에만) ---------- */
   var STORE = 'bidKeyweb.connection';
   function loadSaved() { try { var v = JSON.parse(localStorage.getItem(STORE) || 'null'); return v && v.repo && v.token ? v : null; } catch (e) { return null; } }
   function saveConn() { try { localStorage.setItem(STORE, JSON.stringify({ repo: S.repo, token: S.token, savedAt: nowIso() })); return true; } catch (e) { return false; } }
   function clearSaved() { try { localStorage.removeItem(STORE); } catch (e) { /* 저장소를 쓸 수 없는 브라우저 */ } }
-  function paintRemember() { var on = !!loadSaved(); $('#btnRemember').hidden = on; $('#rememberState').hidden = !on; }
-  $('#btnRemember').onclick = function () {
-    var ok = confirm('보안을 위해 권하지 않습니다.\n\n' +
-      '저장소 이름과 토큰을 이 브라우저에 그대로 저장합니다. 다음에 이 페이지를 열면 자동으로 연결합니다.\n\n' +
-      '- 이 PC와 브라우저를 쓰는 다른 사람도 저장된 토큰으로 저장소에 접근할 수 있습니다.\n' +
-      '- 같은 주소(' + location.host + ')의 다른 페이지가 저장된 토큰을 읽을 수 있습니다.\n' +
-      '- 공용 PC에서는 저장하지 마세요.\n\n' +
-      '저장한 값은 「바꾸기」로 지울 수 있습니다.\n\n그래도 저장할까요?');
-    if (!ok) return;
-    if (saveConn()) { paintRemember(); toast('저장소와 토큰을 이 브라우저에 저장했습니다.', 'warn'); }
-    else toast('이 브라우저는 저장을 지원하지 않습니다.', 'warn');
+  function paintRemember() { $('#rememberState').hidden = !loadSaved(); }
+  $('#btnConnectSave').onclick = async function () {
+    var ok = await ask('브라우저에 저장할까요?',
+      '<p><b class="red">보안을 위해 권하지 않습니다.</b></p>' +
+      '<p>저장소를 확인한 뒤 저장소 이름과 토큰을 이 브라우저에 그대로 저장합니다. 다음에 이 페이지를 열면 자동으로 연결합니다.</p>' +
+      '<ul><li>이 PC와 브라우저를 쓰는 다른 사람도 저장된 토큰으로 저장소에 접근할 수 있습니다.</li>' +
+      '<li>같은 주소(' + esc(location.host) + ')의 다른 페이지가 저장된 토큰을 읽을 수 있습니다.</li>' +
+      '<li>공용 PC에서는 저장하지 마세요.</li></ul>' +
+      '<p>저장한 값은 「바꾸기」로 지울 수 있습니다.</p>', '그래도 저장', true);
+    if (ok) connect($('#repo').value.trim(), $('#token').value.trim(), false, true);
   };
 
   $('#btnConnect').onclick = function () { connect($('#repo').value.trim(), $('#token').value.trim()); };
-  async function connect(repo, token, fromSaved) {
+  async function connect(repo, token, fromSaved, saveAfter) {
     var out = $('#connectResult'), btn = $('#btnConnect');
     if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { out.innerHTML = hint('stop', '저장소를 <b>소유자/저장소</b> 형식으로 입력하세요. 예: your-company/bid-keys'); return; }
     if (!token) { out.innerHTML = hint('stop', '접근 토큰을 입력하세요.'); return; }
@@ -903,7 +928,9 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
       $('#repoChip').classList.add('on'); $('#repoName').textContent = repo;
       $('#sumRepo').textContent = repo; $('#sumBranch').textContent = BRANCH; $('#vaultRepo').textContent = repo;
       toast(fromSaved ? '브라우저에 저장된 저장소와 토큰으로 연결했습니다.' : '저장소를 확인했습니다.');
-      if (!fromSaved && loadSaved()) saveConn();          // 이미 저장해 두었으면 새로 연결한 값으로 바꾼다
+      if (saveAfter) {
+        if (saveConn()) toast('저장소와 토큰을 이 브라우저에 저장했습니다.', 'warn'); else toast('이 브라우저는 저장을 지원하지 않습니다.', 'warn');
+      } else if (!fromSaved && loadSaved()) saveConn();   // 이미 저장해 두었으면 새로 연결한 값으로 바꾼다
       paintRemember();
       setStep(1, 'done'); setStep(2, 'current'); renderGenerate();
       if (!fromSaved) { go('generate'); $('#keyName').focus(); }
@@ -927,10 +954,13 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     toast('저장소와 토큰을 지웠습니다. 다시 입력하세요.');
   }
   /* 「바꾸기」: 확인을 받은 뒤 저장소와 토큰을 지우고 1단계로 돌아간다. */
-  $('#reopen1').onclick = function () {
-    var ok = confirm('연결한 저장소와 토큰을 지우고 다시 입력합니다.' + (loadSaved() ? ' 브라우저에 저장한 값도 지웁니다.' : '') + '\n\n' +
-      'GitHub 토큰은 만든 화면에서 한 번만 보입니다. 토큰 값을 따로 보관하지 않았다면 GitHub에서 새로 만들어야 합니다.\n' +
-      '저장소에 저장한 키는 그대로 남습니다.\n\n계속할까요?');
+  $('#reopen1').onclick = async function () {
+    var saved = !!loadSaved(), pending = S.key && $('#p4').dataset.state !== 'done' && !$('#commitOut .nextstep');
+    var ok = await ask('저장소와 토큰을 바꿀까요?',
+      '<p>연결한 저장소와 토큰을 지우고 다시 입력합니다.' + (saved ? ' <b>브라우저에 저장한 값도 지웁니다.</b>' : '') + '</p>' +
+      (pending ? '<p class="red">만들고 있던 키 「' + esc(S.key.name) + '」를 버립니다. 아직 GitHub에 저장하지 않았습니다.</p>' : '') +
+      '<p>GitHub 토큰은 만든 화면에서 한 번만 보입니다. 토큰 값을 따로 보관하지 않았다면 GitHub에서 새로 만들어야 합니다(Regenerate token).</p>' +
+      '<p>저장소에 저장한 키는 그대로 남습니다.</p>', '지우고 다시 입력', true);
     if (ok) { clearSaved(); disconnect(); paintRemember(); }
   };
   /* 연결된 상태에서 새로고침하거나 탭을 닫으면 토큰이 사라지므로 한 번 경고한다. */
