@@ -332,7 +332,7 @@
   #vaultBody table{margin-top:10px}
   #vaultBody tr.fresh td{background:#f7f7f7}
   #vaultBody .bid{font-family:var(--mono);font-weight:600}
-  #vaultBody .hash{font-family:var(--mono);font-size:12.5px;color:var(--muted)}
+  #vaultBody .hash{font-family:var(--mono);font-size:12.5px;color:var(--text);word-spacing:3px;max-width:22em;line-height:1.7}
   .acts{display:flex;gap:6px;flex-wrap:wrap}
   .sbtn{padding:4px 10px;border:1px solid #d6d6d6;background:#fff;border-radius:6px;font:inherit;font-size:13px;cursor:pointer;color:var(--text)}
   .sbtn:hover{border-color:var(--text)}
@@ -1138,13 +1138,13 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     var rows = S.vault.map(function (v) {
       return '<tr class="' + (v.keyId === S.fresh ? 'fresh' : '') + '"><td data-l="키 이름"><b>' + esc(v.name) + '</b><div class="mono" style="color:var(--faint);font-size:12px">' + esc(v.keyId) + '</div></td>' +
         '<td data-l="만든 시각">' + (v.at ? fmt(v.at) : '-') + '</td>' +
-        '<td data-l="공개키 해시(앞 8자리)" class="hash">' + esc(v.hash8) + '</td>' +
+        '<td data-l="공개키 해시" class="hash">' + esc(v.hash ? group(v.hash) : v.hash8) + '</td>' +
         '<td data-l="커밋" class="mono">' + (v.commitUrl ? '<a href="' + esc(v.commitUrl) + '" target="_blank" rel="noopener">' + v.commit + '</a>' : v.commit) + '</td>' +
         '<td data-l="내려받기"><div class="acts"><button class="sbtn" data-dl="pub" data-key="' + esc(v.keyId) + '">공개키</button>' +
         '<button class="sbtn priv" data-dl="priv" data-key="' + esc(v.keyId) + '">개인키</button>' +
         '<button class="sbtn" data-dl="both" data-key="' + esc(v.keyId) + '">둘 다</button></div></td></tr>';
     }).join('');
-    body.innerHTML = '<table><thead><tr><th>키 이름</th><th>만든 시각</th><th>공개키 해시(앞 8자리)</th><th>커밋</th><th>내려받기</th></tr></thead><tbody>' + rows + '</tbody></table>';
+    body.innerHTML = '<table><thead><tr><th>키 이름</th><th>만든 시각</th><th>공개키 해시</th><th>커밋</th><th>내려받기</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
   $('#vaultBody').addEventListener('click', async function (e) {
     var b = e.target.closest('[data-dl]'); if (!b || !S.connected) return;
