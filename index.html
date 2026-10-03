@@ -288,6 +288,7 @@
   .conn-actions{display:flex;justify-content:flex-end;margin-top:12px}
   .btn.danger-ghost{color:var(--red);border-color:var(--red-line)}
   .btn.danger-ghost:hover{border-color:var(--red)}
+  .zipsave{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 0}
   .row2{display:grid;grid-template-columns:2fr 1fr;gap:14px}
   .field{margin-bottom:14px}
   .field label{display:block;font-weight:600;font-size:14px;margin-bottom:5px}
@@ -493,6 +494,8 @@
     <div class="body">
       <p data-review-key="pc-p1">GitHub에 올리기 전에 세 파일을 PC에 저장하세요. 세 파일을 모두 저장해야 4단계로 넘어갑니다. 키명세서는 유니피커 입찰시스템에 공개키보다 먼저 올리는 파일입니다.</p>
       <div class="hint stop" data-review-key="pc-warn-lose"><span class="ico"><svg class="i"><use href="#i-alert"/></svg></span><div><b>개인키를 잃으면 입찰가를 열 수 없습니다.</b> 안전한 곳에 한 부 더 보관하세요.</div></div>
+      <div class="zipsave" data-review-key="pc-zip"><button class="btn" id="btnZip"><svg class="i"><use href="#i-down"/></svg>3개 파일을 ZIP 하나로 저장</button><span class="fhint" id="zipName"></span></div>
+      <p class="fhint" style="margin:6px 0 0">파일을 하나씩 저장해도 됩니다.</p>
       <div class="files" data-review-key="pc-files">
         <div class="file" id="fSpec"><span class="name" id="fSpecName">keyspec.json</span><span class="fstate">아직 저장하지 않음</span><button class="btn ghost" data-save="spec"><svg class="i"><use href="#i-down"/></svg>키명세서 저장</button></div>
         <div class="file" id="fPub"><span class="name" id="fPubName">public.pem</span><span class="fstate">아직 저장하지 않음</span><button class="btn ghost" data-save="pub"><svg class="i"><use href="#i-down"/></svg>공개키 저장</button></div>
@@ -778,6 +781,46 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     var t = document.createElement('div'); t.className = 'toast ' + (kind || ''); t.textContent = msg;
     $('#toasts').appendChild(t); setTimeout(function () { t.remove(); }, 5000);
   }
+  /* ---------- ZIP (외부 라이브러리 없이, 무압축 STORE, UTF-8 파일명) ---------- */
+  var CRC_TABLE = (function () {
+    var t = new Uint32Array(256);
+    for (var n = 0; n < 256; n++) { var c = n; for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; }
+    return t;
+  })();
+  function crc32(bytes) { var c = 0xFFFFFFFF; for (var i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+  function makeZip(files) {                      // files: [{ name, text }]
+    var enc = new TextEncoder(), parts = [], central = [], offset = 0, d = new Date();
+    var time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+    var date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+    files.forEach(function (f) {
+      var name = enc.encode(f.name), data = enc.encode(f.text), crc = crc32(data);
+      var h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true);   // 0x0800 = 파일명 UTF-8
+      h.setUint16(8, 0, true); h.setUint16(10, time, true); h.setUint16(12, date, true);
+      h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true);
+      h.setUint16(26, name.length, true); h.setUint16(28, 0, true);
+      parts.push(new Uint8Array(h.buffer), name, data);
+      var c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true);
+      c.setUint16(10, 0, true); c.setUint16(12, time, true); c.setUint16(14, date, true);
+      c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true);
+      c.setUint16(28, name.length, true); c.setUint32(42, offset, true);
+      central.push(new Uint8Array(c.buffer), name);
+      offset += 30 + name.length + data.length;
+    });
+    var size = central.reduce(function (a, x) { return a + x.length; }, 0);
+    var e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true);
+    e.setUint32(12, size, true); e.setUint32(16, offset, true);
+    return new Blob(parts.concat(central, [new Uint8Array(e.buffer)]), { type: 'application/zip' });
+  }
+  function downloadBlob(name, blob) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  }
+  function zipName(v) { return v.name + '_' + v.hash8 + '_keys.zip'; }
+
   function download(name, text) {
     var a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob([text], { type: 'application/x-pem-file' }));
@@ -1076,6 +1119,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     $('#genActions').innerHTML = '<button class="btn" id="btnToPc">다음: PC에 저장</button><button class="btn ghost" id="btnRegen">버리고 다시 만들기</button>';
     $('#btnToPc').onclick = function () {
       $('#sumName').textContent = name;
+      $('#zipName').textContent = zipName(k);
       $('#fPubName').textContent = fileName(k, 'public'); $('#fPrivName').textContent = fileName(k, 'private'); $('#fSpecName').textContent = fileName(k, 'keyspec');
       setStep(2, 'done'); setStep(3, 'current'); go('pc');
     };
@@ -1096,6 +1140,16 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
       $('#btnToGit').disabled = !(S.saved.pub && S.saved.priv && S.saved.spec);
     };
   });
+  $('#btnZip').onclick = function () {
+    var k = S.key;
+    downloadBlob(zipName(k), makeZip([
+      { name: fileName(k, 'keyspec'), text: keySpec(k) }, { name: fileName(k, 'public'), text: k.pub }, { name: fileName(k, 'private'), text: k.priv }]));
+    ['spec', 'pub', 'priv'].forEach(function (w) { S.saved[w] = true; });
+    ['#fSpec', '#fPub', '#fPriv'].forEach(function (sel) { var f = $(sel); f.classList.add('saved'); $('.fstate', f).textContent = 'ZIP에 포함해 PC에 저장함 (' + fmt(new Date()).slice(11) + ')'; });
+    this.innerHTML = '<svg class="i"><use href="#i-down"/></svg>ZIP 다시 저장';
+    toast('ZIP 안에 개인키가 들어 있습니다. 입찰 마감 전에는 누구에게도 보내지 마세요.', 'warn');
+    $('#btnToGit').disabled = false;
+  };
   $('#btnToGit').onclick = function () {
     S.exportAt = nowIso();
     setStep(3, 'done'); setStep(4, 'current'); renderS4(); go('github');
@@ -1164,6 +1218,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     $('[data-save="pub"]').innerHTML = '<svg class="i"><use href="#i-down"/></svg>공개키 저장';
     $('[data-save="priv"]').innerHTML = '<svg class="i"><use href="#i-down"/></svg>개인키 저장';
     $('[data-save="spec"]').innerHTML = '<svg class="i"><use href="#i-down"/></svg>키명세서 저장';
+    $('#btnZip').innerHTML = '<svg class="i"><use href="#i-down"/></svg>3개 파일을 ZIP 하나로 저장';
     $('#btnToGit').disabled = true; setStep(3, 'locked');
     $('#s4body').innerHTML = ''; setStep(4, 'locked');
   }
@@ -1196,7 +1251,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
         '<td data-l="내려받기"><div class="acts"><button class="sbtn" data-dl="pub" data-key="' + esc(v.keyId) + '">공개키</button>' +
         '<button class="sbtn priv" data-dl="priv" data-key="' + esc(v.keyId) + '">개인키</button>' +
         '<button class="sbtn" data-dl="spec" data-key="' + esc(v.keyId) + '">키명세서</button>' +
-        '<button class="sbtn" data-dl="all" data-key="' + esc(v.keyId) + '">모두</button></div></td></tr>';
+        '<button class="sbtn" data-dl="all" data-key="' + esc(v.keyId) + '">모두(ZIP)</button></div></td></tr>';
     }).join('');
     body.innerHTML = '<table><thead><tr><th>키 이름</th><th>만든 시각</th><th>커밋</th><th>내려받기</th></tr></thead><tbody>' + rows + '</tbody></table>';
   }
@@ -1206,13 +1261,16 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     var w = b.dataset.dl, kinds = w === 'all' ? ['keyspec', 'public', 'private'] : [w === 'pub' ? 'public' : w === 'priv' ? 'private' : 'keyspec'];
     b.disabled = true;
     try {
+      var zipFiles = [];
       for (var i = 0; i < kinds.length; i++) {
         var text = kinds[i] === 'keyspec'
           ? (await readFile('keys/' + v.keyId + '/keyspec.json')) || (v.hash && v.at ? keySpec(v) : null)   // 예전 키는 키명세서를 만들어 준다
           : await readFile('keys/' + v.keyId + '/' + kinds[i] + '.pem');
         if (text === null) throw new GitHubError(404, '「' + v.name + '」의 ' + kinds[i] + ' 파일이 저장소에 없습니다.');
-        download(fileName(v, kinds[i]), text);
+        if (w === 'all') zipFiles.push({ name: fileName(v, kinds[i]), text: text });
+        else download(fileName(v, kinds[i]), text);
       }
+      if (w === 'all') downloadBlob(zipName(v), makeZip(zipFiles));
       if (kinds.indexOf('private') >= 0) toast('이 파일은 입찰 마감 후 유니피커 입찰시스템에 제출할 때만 쓰세요.', 'warn');
       else toast('「' + v.name + '」 ' + (kinds[0] === 'keyspec' ? '키명세서' : '공개키') + '를 내려받았습니다.');
       try {
