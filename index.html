@@ -280,6 +280,14 @@
   dialog#dlg #dlgBody{font-size:14.5px}
   dialog#dlg #dlgBody ul{margin:8px 0;padding-left:20px}
   dialog#dlg .actions{margin-top:16px;justify-content:flex-end}
+  .conn-toggle{display:none;width:100%;text-align:left;background:none;border:0;padding:0;font:inherit;cursor:pointer}
+  .panel[data-state="done"] .conn-toggle{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+  .conn-toggle .chev{margin-left:auto;transition:transform .15s}
+  .conn-toggle[aria-expanded="true"] .chev{transform:rotate(180deg)}
+  .conn-info{margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  .conn-actions{display:flex;justify-content:flex-end;margin-top:12px}
+  .btn.danger-ghost{color:var(--red);border-color:var(--red-line)}
+  .btn.danger-ghost:hover{border-color:var(--red)}
   .row2{display:grid;grid-template-columns:2fr 1fr;gap:14px}
   .field{margin-bottom:14px}
   .field label{display:block;font-weight:600;font-size:14px;margin-bottom:5px}
@@ -441,7 +449,16 @@
 <!-- 1 -->
   <h2 id="connect" data-review-key="connect">1. GitHub 연결 <span class="badge" data-badge="1"></span></h2>
   <section class="panel" id="p1" data-state="current" data-review-key="connect-panel">
-    <div class="done-sum" data-review-key="connect-summary">저장소 <code id="sumRepo"></code> 브랜치 <code id="sumBranch"></code> <button class="linkbtn" id="reopen1">바꾸기</button> <span class="fhint" id="rememberState" hidden>· 브라우저에 저장됨</span></div>
+    <button type="button" class="done-sum conn-toggle" id="connToggle" aria-expanded="false" data-review-key="connect-summary">저장소 <code id="sumRepo"></code> 브랜치 <code id="sumBranch"></code> <span class="fhint" id="rememberState" hidden>· 브라우저에 저장됨</span><span class="chev" aria-hidden="true">▾</span></button>
+    <div class="conn-info" id="connInfo" hidden data-review-key="connect-info">
+      <dl class="kv">
+        <dt>저장소</dt><dd class="mono" id="infoRepo"></dd>
+        <dt>브랜치</dt><dd class="mono">main</dd>
+        <dt>토큰</dt><dd class="mono" id="infoToken"></dd>
+        <dt>보관 위치</dt><dd id="infoStore"></dd>
+      </dl>
+      <div class="conn-actions"><button class="btn ghost danger-ghost" id="btnResetConn">초기화</button></div>
+    </div>
     <div class="body">
       <p data-review-key="connect-p1">키를 보관할 귀사 GitHub 저장소를 지정하세요. 저장소나 토큰이 없다면 먼저 <a href="#prep">GitHub 준비하기</a>를 따라 하세요.</p>
       <div class="row2">
@@ -953,6 +970,7 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
         if (saveConn()) toast('저장소와 토큰을 이 브라우저에 저장했습니다.', 'warn'); else toast('이 브라우저는 저장을 지원하지 않습니다.', 'warn');
       } else if (!fromSaved && loadSaved()) saveConn();   // 이미 저장해 두었으면 새로 연결한 값으로 바꾼다
       paintRemember();
+      showConnInfo(false);
       setStep(1, 'done'); setStep(2, 'current'); renderGenerate();
       if (!fromSaved) { go('generate'); $('#keyName').focus(); }
     } catch (e) {
@@ -974,15 +992,27 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     resetFrom(2); setStep(1, 'current'); $('#connectResult').innerHTML = ''; renderVault(); renderHistory(); go('connect');
     toast('저장소와 토큰을 지웠습니다. 다시 입력하세요.');
   }
-  /* 「바꾸기」: 확인을 받은 뒤 저장소와 토큰을 지우고 1단계로 돌아간다. */
-  $('#reopen1').onclick = async function () {
+  /* 연결 요약을 누르면 펼쳐 지금 연결된 값을 보여준다. 토큰은 앞뒤 일부만. */
+  function maskToken(t) { return t.length > 16 ? t.slice(0, 11) + '…' + t.slice(-4) : '••••'; }
+  function showConnInfo(open) {
+    $('#connToggle').setAttribute('aria-expanded', open ? 'true' : 'false');
+    $('#connInfo').hidden = !open;
+    if (!open) return;
+    $('#infoRepo').textContent = S.repo;
+    $('#infoToken').textContent = maskToken(S.token);
+    $('#infoStore').textContent = loadSaved() ? '이 브라우저에 저장됨 (다음에 열어도 자동 연결)' : '이 페이지 메모리에만 있음 (페이지를 닫으면 사라짐)';
+  }
+  $('#connToggle').onclick = function () { showConnInfo($('#connInfo').hidden); };
+
+  /* 「초기화」: 확인을 받은 뒤 저장소와 토큰을 지우고 1단계로 돌아간다. */
+  $('#btnResetConn').onclick = async function () {
     var saved = !!loadSaved(), pending = S.key && $('#p4').dataset.state !== 'done' && !$('#commitOut .nextstep');
-    var ok = await ask('저장소와 토큰을 바꿀까요?',
+    var ok = await ask('저장소와 토큰을 초기화할까요?',
       '<p>연결한 저장소와 토큰을 지우고 다시 입력합니다.' + (saved ? ' <b>브라우저에 저장한 값도 지웁니다.</b>' : '') + '</p>' +
       (pending ? '<p class="red">만들고 있던 키 「' + esc(S.key.name) + '」를 버립니다. 아직 GitHub에 저장하지 않았습니다.</p>' : '') +
       '<p>GitHub 토큰은 만든 화면에서 한 번만 보입니다. 토큰 값을 따로 보관하지 않았다면 GitHub에서 새로 만들어야 합니다(Regenerate token).</p>' +
-      '<p>저장소에 저장한 키는 그대로 남습니다.</p>', '지우고 다시 입력', true);
-    if (ok) { clearSaved(); disconnect(); paintRemember(); }
+      '<p>저장소에 저장한 키는 그대로 남습니다.</p>', '초기화', true);
+    if (ok) { clearSaved(); showConnInfo(false); disconnect(); paintRemember(); }
   };
   /* 연결된 상태에서 새로고침하거나 탭을 닫으면 토큰이 사라지므로 한 번 경고한다. */
   window.addEventListener('beforeunload', function (e) {
