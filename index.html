@@ -448,7 +448,7 @@
     <div class="body">
       <p data-review-key="connect-p1">키를 보관할 귀사 GitHub 저장소를 지정하세요. 저장소나 토큰이 없다면 먼저 <a href="#prep">GitHub 준비하기</a>를 따라 하세요.</p>
       <div class="row2">
-        <div class="field" data-review-key="connect-field-repo"><label for="repo">저장소</label><input id="repo" class="mono" value="" placeholder="예: your-company/bid-keys" autocomplete="off" spellcheck="false"><div class="fhint">소유자/저장소 형식입니다.</div></div>
+        <div class="field" data-review-key="connect-field-repo"><label for="repo">저장소</label><input id="repo" class="mono" value="" placeholder="예: your-company/bid-keys 또는 https://github.com/your-company/bid-keys" autocomplete="off" spellcheck="false"><div class="fhint">소유자/저장소 형식이나 GitHub 저장소 주소를 그대로 붙여 넣어도 됩니다.</div></div>
         <div class="field" data-review-key="connect-field-branch"><label for="branch">브랜치</label><input id="branch" class="mono" value="main" readonly aria-readonly="true" tabindex="-1"><div class="fhint">main으로 고정됩니다.</div></div>
       </div>
       <div class="field" data-review-key="connect-field-token"><label for="token">접근 토큰</label><input id="token" class="mono" type="password" value="" placeholder="github_pat_로 시작하는 값" autocomplete="off"><div class="fhint">Fine-grained PAT. 이 저장소에만 Contents 읽기·쓰기 권한을 주세요.</div></div>
@@ -905,10 +905,26 @@ document.querySelectorAll('.grouphead').forEach(function (h) {
     if (ok) connect($('#repo').value.trim(), $('#token').value.trim(), false, true);
   };
 
+  /**
+   * 저장소 입력을 「소유자/저장소」로 정리한다. 형식이 틀리면 빈 문자열.
+   * 받는 형식: owner/repo · https://github.com/owner/repo(/…) · github.com/owner/repo · …/repo.git · git@github.com:owner/repo.git
+   */
+  function parseRepo(input) {
+    var v = String(input || '').trim();
+    var m = v.match(/^(?:https?:\/\/)?(?:www\.)?github\.com[\/:]([^\/\s?#]+)\/([^\/\s?#]+)/i) ||
+            v.match(/^git@github\.com:([^\/\s]+)\/([^\/\s]+)$/i) ||
+            v.match(/^([^\/\s:]+)\/([^\/\s]+)$/);
+    if (!m) return '';
+    var owner = m[1], name = m[2].replace(/\.git$/i, '');
+    return /^[\w.-]+$/.test(owner) && /^[\w.-]+$/.test(name) ? owner + '/' + name : '';
+  }
+
   $('#btnConnect').onclick = function () { connect($('#repo').value.trim(), $('#token').value.trim()); };
   async function connect(repo, token, fromSaved, saveAfter) {
     var out = $('#connectResult'), btn = $('#btnConnect');
-    if (!/^[\w.-]+\/[\w.-]+$/.test(repo)) { out.innerHTML = hint('stop', '저장소를 <b>소유자/저장소</b> 형식으로 입력하세요. 예: your-company/bid-keys'); return; }
+    repo = parseRepo(repo);
+    if (!repo) { out.innerHTML = hint('stop', '저장소를 <b>소유자/저장소</b> 또는 GitHub 주소로 입력하세요. 예: your-company/bid-keys, https://github.com/your-company/bid-keys'); return; }
+    $('#repo').value = repo;                              // 정리한 형식으로 보여준다
     if (!token) { out.innerHTML = hint('stop', '접근 토큰을 입력하세요.'); return; }
     S.repo = repo; S.token = token;
     btn.disabled = true; btn.textContent = '확인하는 중…'; out.innerHTML = '';
