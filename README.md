@@ -1,5 +1,34 @@
 # 입찰가 암호화 키 관리
 
+<!-- unipicker-wiki:readme-start -->
+## 저장소 소개
+
+소속: 유니피커 청약시스템 (AI 분류·검토 필요). [^wiki-readme-classification]
+
+기존 구성 지도에서 확인한 역할: 입찰가 암호화 키 관리 웹 안내. 기술 구성: 정적 웹 / README 근거. 확인 수준: 문서/선언 확인. [^wiki-readme-role]
+
+사용/참조하는 저장소:
+- bid-crypto-sample — 문서상 연계 도구 [^wiki-readme-relations]
+
+고정 소스 기준의 정적 조사다. 현재 운영 연결·호출 성공·배포물 일치는 검증하지 않았다.
+
+## 빌드 방법
+
+확보한 소스 기준: main / 977f07edfd1b2a485ab0ed7b4d8f090f5801382c. [^wiki-readme-source]
+기존 지도에 기록된 기술 구성: 정적 웹 / README 근거. [^wiki-readme-role]
+
+빌드 방법: 미확인. 작업 디렉터리·필요 도구와 버전·사전 준비·명령·결과 파일·테스트 방법을 확인해 채운다. 설치·빌드·실행은 수행하지 않았다.
+
+[^wiki-readme-classification]: 2026-10-08 저장소 README 검토 초안의 서비스 분류. 본문의 사용자 확인/AI 분류·검토 필요 표시를 따른다.
+
+[^wiki-readme-role]: 확보 고정 소스의 정적 역할 조사. [코드/자료 읽기 기준](https://github.com/bombommobile/bid-keyweb/blob/977f07edfd1b2a485ab0ed7b4d8f090f5801382c/README.md#L1). 현재 운영 연결이나 호출 성공을 확인한 결과는 아니다.
+
+[^wiki-readme-source]: 확보 소스 main / `977f07edfd1b2a485ab0ed7b4d8f090f5801382c`. [고정 커밋](https://github.com/bombommobile/bid-keyweb/tree/977f07edfd1b2a485ab0ed7b4d8f090f5801382c). 최신 코드·운영 배포물과의 일치 미확인.
+
+[^wiki-readme-relations]: 2026-10-08 허용 고정 소스 대조. [bid-crypto-sample / README.md:7](https://github.com/bombommobile/bid-crypto-sample/blob/28fefbc8a5ca70ee13bf386778104ed9b4316e7b/README.md#L7). 패키지 사용/API 경로 대응/계약·문서 참조와 현재 운영 사용을 구분한다.
+<!-- unipicker-wiki:readme-end -->
+
+
 분양사와 유니피커가 입찰가 암호화에 쓸 RSA 키 쌍을 만들고, **자기 회사 GitHub 비공개 저장소**에 보관하는 웹 페이지입니다.
 
 - 주소: <https://bombommobile.github.io/bid-keyweb/>
